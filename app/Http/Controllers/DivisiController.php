@@ -1,0 +1,191 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Divisi;
+use Illuminate\Http\Request;
+use Ramsey\Uuid\Uuid;
+use Illuminate\Support\Carbon;
+
+class DivisiController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index(Request $request)
+    {
+        //
+        try{
+            if($request->user()->hasRole('SuperAdmin')){
+                $divisis = Divisi::all();
+                return response()->json(['status' => true, 'message' => "Berhasil ambil data divisi", 'data' => $divisis]);
+            }else{
+                $divisis = Divisi::where('id_organisasi', $request->user()->id_organisasi)->get();
+                return response()->json(['status' => true, 'message' => "Berhasil ambil data divisi", 'data' => $divisis]);
+            }
+        }catch (Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+        //
+        $logo_divisi = [];
+        if(($request->user()->hasPermissionTo('users.create'))){
+            $request->validate([
+                'nama_divisi' => ['required', 'string'],
+                'id_organisasi' => ['required', 'string'],
+                'alamat_divisi' => ['nullable', 'string'],
+                'keterangan_divisi' => ['nullable', 'string'],
+                'logo_divisi_new' => ['nullable'],
+                // 'kelurahan_aset' => ['required', 'string'],
+                // 'kecamatan_aset' => ['required', 'string'],
+                // 'foto_aset.*'=> 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            ]);
+            try{
+                $nama_divisi = strtoupper($request->nama_divisi);
+                $id_divisi = Uuid::uuid4()->toString();
+                if($request->hasfile('logo_divisi_new')){
+                    $file = $request->file('logo_divisi_new');
+                    $name = '['.$id_divisi.'] '.$nama_divisi.'.'.$file->extension();
+                    $file->move(public_path().'/logo_divisi/', $name);
+                    $logo_divisi[] = $name;
+                }
+
+                // $tags = json_decode($request->tags_inovation);
+                Divisi::create([
+                    'id_divisi' => $id_divisi,
+                    'id_organisasi' => $request->id_organisasi ,
+                    'nama_divisi' => $nama_divisi ,
+                    'alamat_divisi' => $request->alamat_divisi ,
+                    'keterangan_divisi' => $request->keterangan_divisi,
+                    'created_by' => $request->user()->email ,
+                    'updated_by' => $request->user()->email ,
+                    'logo_divisi'=> count($logo_divisi) > 0 ? implode(",",$logo_divisi) : null,
+                ]);
+            }catch (Exception $e) {
+                return response()->json(['status' => false, 'message' => $e->getMessage()]);
+            }
+        }else{
+            return response()->json(['status' => false, 'message' => 'Tidak bisa diakses (Forbidden)']);
+        }
+        return response()->json(['status' => true, 'message' => 'Berhasil menambahkan profil divisi dari suatu organisasi']);
+
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  \App\Models\Divisi  $divisi
+     * @return \Illuminate\Http\Response
+     */
+    public function show(Divisi $divisi)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  \App\Models\Divisi  $divisi
+     * @return \Illuminate\Http\Response
+     */
+    public function edit(Divisi $divisi)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Divisi  $divisi
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, Divisi $divisi)
+    {
+        if(($request->user()->hasPermissionTo('users.update')) && ($request->user()->id_organisasi == $request->id_organisasi)){
+            $request->validate([
+                'nama_divisi' => ['required', 'string'],
+                'id_organisasi' => ['required', 'string'],
+                'alamat_divisi' => ['nullable', 'string'],
+                'keterangan_divisi' => ['nullable', 'string'],
+                'logo_divisi_new' => ['nullable'],
+            ]);
+            $logo_divisi_name = '';
+            try{
+                $id_divisi = $request->id_divisi;
+                $id_organisasi = $request->id_organisasi;
+                $nama_divisi = strtoupper($request->nama_divisi);
+                if($request->hasfile('logo_divisi_new')){
+                    $mask = public_path().'/logo_divisi/'.'['.$id_divisi.'] '.'*.*';
+                    array_map('unlink', glob($mask));
+                    $file = $request->file('logo_divisi_new');
+                    $name = '['.$id_divisi.'] '.$nama_divisi.'.'.$file->extension();
+                    $file->move(public_path().'/logo_divisi/', $name);
+                    $logo_divisi_name = $name;
+                }else{
+                    $logo_divisi_name = $request->logo_divisi;
+                }
+
+                $current_date_time = Carbon::now()->toDateTimeString(); 
+                $data_divisi = [
+                    'nama_divisi' => $nama_divisi ,
+                    'alamat_divisi' => $request->alamat_divisi ,
+                    'keterangan_divisi' => $request->keterangan_divisi,
+                    'updated_by' => $request->user()->email ,
+                    'logo_divisi'=> $logo_divisi_name,
+                    'updated_at' => $current_date_time,
+                ];
+                Divisi::where('id_divisi', $id_divisi)->where('id_organisasi', $id_organisasi)->update($data_divisi);
+            }catch (Exception $e) {
+                return response()->json(['status' => false, 'message' => $e->getMessage()]);
+            }
+        }else{
+            return response()->json(['status' => false, 'message' => 'Tidak bisa diakses (Forbidden)']);
+        }
+        return response()->json(['status' => true, 'message' => 'Berhasil memutakhirkan data divisi']);
+
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  \App\Models\Divisi  $divisi
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy(Request $request)
+    {
+        //
+        if($request->user()->hasRole('SuperAdmin')){
+            $id_divisi = $request->id_divisi;
+            try{
+                Divisi::where('id_divisi', $id_divisi)->delete();
+            }catch (Exception $e) {
+                return response()->json(['status' => false, 'message' => $e->getMessage()]);
+            }
+        }else{
+            return response()->json(['status' => false, 'message' => 'Tidak bisa diakses (Forbidden)']);
+        }
+        return response()->json(['msg' => 'Sukses menghapus profil divisi']);
+    }
+}
