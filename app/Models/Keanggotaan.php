@@ -14,6 +14,8 @@ class Keanggotaan extends Model
         'id_user',
         'id_keanggotaan',
         'jenis_keanggotaan',
+        'role_keanggotaan',
+        'permissions_keanggotaan',
         'created_by',
         'updated_by',
     ];

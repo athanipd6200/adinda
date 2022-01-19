@@ -18,6 +18,12 @@ class OrganisasiController extends Controller
      */
     public function index(Request $request)
     {
+        // error_log('Masuk ke index organisasi');
+        // $list_role = $request->user()->organisasis();
+        // error_log(implode(',',$list_role));
+        // foreach($list_role as $organisasi){
+        //     error_log(($organisasi));
+        // }
         //pengecekan user ini hanya bisa diluar try catch
         $list_role = $request->user()->getRoleNames();
         // error_log(gettype($list_role));
@@ -62,7 +68,9 @@ class OrganisasiController extends Controller
     {
         //
         $logo_organisasi = [];
-        if(($request->user()->hasPermissionTo('users.create')) || $request->user()->hasRole(['SuperAdmin'])){
+        // $status_keanggotaan = in_array($request->id_organisasi, $request->user()->organisasis());
+        // $status_rbac = $request->user()->hasPermissionTo('organisasi.create');
+        if($request->user()->hasRole(['SuperAdmin'])){
             $request->validate([
                 'nama_organisasi' => ['required', 'string'],
                 'alamat_organisasi' => ['required', 'string'],
@@ -133,8 +141,8 @@ class OrganisasiController extends Controller
     public function update(Request $request, Organisasi $organisasi = null)
     {
         //
-        // error_log($request->user()->getRoleNames());
-        if((($request->user()->hasPermissionTo('users.update')) && ($request->user()->id_organisasi == $request->id_organisasi)) || ($request->user()->hasRole(['SuperAdmin']))){
+        $status_keanggotaan = in_array($request->id_organisasi, $request->user()->keanggotaan_by_role('AdminOrganisasi'));
+        if(($status_keanggotaan) || ($request->user()->hasRole(['SuperAdmin']))){
             $request->validate([
                 'nama_organisasi' => ['required', 'string'],
                 'alamat_organisasi' => ['required', 'string'],

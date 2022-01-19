@@ -298,21 +298,24 @@ Route::post('/verification-artikel', [App\Http\Controllers\ArtikelController::cl
 Route::middleware('auth:sanctum')->get('/users/{search?}', function (Request $request, String $search = null) {
     $users = [];
     if($request->user() != null && $request->user()->hasPermissionTo('users.read')){
-        if($search == null){
-            $users = User::all();
-            return response($users, 200);
-        }elseif($request->keanggotaan_pengguna == 'tambah_anggota' && $request->id_keanggotaan != null && $request->jenis_keanggotaan != null){
+        if($search != null && $request->keanggotaan_pengguna == 'tambah_anggota' && $request->id_keanggotaan != null && $request->jenis_keanggotaan != null){
+            error_log('pencarian user untuk tambah anggota di manajemen organisasi');
             $id_keanggotaan = $request->id_keanggotaan;
             $jenis_keanggotaan = $request->jenis_keanggotaan;
             $keanggotaan = User::with(['keanggotaans'])->where('users.name', 'like', '%'.$search.'%')->get();
             return response($keanggotaan, 200);
         }elseif($request->id_keanggotaan != null && $request->jenis_keanggotaan != null){
+            error_log('ambil user dari suatu keanggotaan di manajemen organisasi');
             $id_keanggotaan = $request->id_keanggotaan;
             $jenis_keanggotaan = $request->jenis_keanggotaan;
-            // $keanggotaan = Keanggotaan::with(['users'])->where('id_keanggotaan', $id_keanggotaan)->where('jenis_keanggotaan', $jenis_keanggotaan)->get();
-            $keanggotaan = DB::table('keanggotaans')->join('users', 'keanggotaans.user.id', '=', 'users.id')->where('keanggotaan', $jenis_keanggotaan)->where('id_keanggotaan', $id_keanggotaan)->get();
+            $keanggotaan = Keanggotaan::distinct('id_user')->where('id_keanggotaan', $id_keanggotaan)->where('jenis_keanggotaan', $jenis_keanggotaan)->join('users', 'users.id', '=', 'keanggotaans.id_user');
             return response($keanggotaan, 200);
+        }elseif($search == null){
+            error_log('all user');
+            $users = User::all();
+            return response($users, 200);
         }else{
+            error_log('pencarian tanpa syarat');
             $users = User::where('name', 'like', '%'.$search.'%')->get();
             return response($users, 200);
         }
@@ -364,6 +367,13 @@ Route::get('/read-tim', [App\Http\Controllers\TimController::class, 'index'])->m
 Route::post('/delete-tim', [App\Http\Controllers\TimController::class, 'destroy'])->middleware('auth:sanctum');
 Route::post('/update-tim', [App\Http\Controllers\TimController::class, 'update'])->middleware('auth:sanctum');
 Route::get('/take-tim/{id_tim?}', [App\Http\Controllers\TimController::class, 'show'])->middleware('auth:sanctum');
+
+// route untuk keanggotaan
+Route::post('/create-keanggotaan', [App\Http\Controllers\KeanggotaanController::class, 'store'])->middleware('auth:sanctum');
+Route::get('/read-keanggotaan', [App\Http\Controllers\KeanggotaanController::class, 'index'])->middleware('auth:sanctum');
+Route::post('/delete-keanggotaan', [App\Http\Controllers\KeanggotaanController::class, 'destroy'])->middleware('auth:sanctum');
+Route::post('/update-keanggotaan', [App\Http\Controllers\KeanggotaanController::class, 'update'])->middleware('auth:sanctum');
+Route::get('/take-keanggotaan', [App\Http\Controllers\KeanggotaanController::class, 'edit'])->middleware('auth:sanctum');
 
 // router error
 Route::get('*', function ()

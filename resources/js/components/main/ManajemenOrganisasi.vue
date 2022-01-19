@@ -359,19 +359,19 @@
     </v-card>
   </v-dialog>
 
-  <!-- DIALOG UNTUK Keanggotaan -->
-  <v-dialog fullscreen transition="dialog-bottom-transition" v-model="dialog_keanggotaan_organisasi" style="z-index:2001;">
+  <!-- DIALOG UNTUK anggota dari keanggotaan-->
+  <v-dialog fullscreen transition="dialog-bottom-transition" v-model="dialog_keanggotaan" style="z-index:2001;">
    <v-toolbar
       dark
       color="primary darken-3"
     >
-      <v-toolbar-title>Keanggotaan Organisasi {{ keanggotaan_organisasi.nama_organisasi }}</v-toolbar-title>
+      <v-toolbar-title>Keanggotaan {{ keanggotaan.jenis_keanggotaan }} {{ keanggotaan.nama_keanggotaan }}</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-toolbar-items>
         <v-btn
           icon
           dark
-          @click="dialog_keanggotaan_organisasi = false"
+          @click="dialog_keanggotaan = false"
         >
           <v-icon>mdi-close</v-icon>
         </v-btn>
@@ -380,9 +380,9 @@
     <v-card>
       <v-card-text>
         <v-data-table
-          :headers="anggota_organisasi_headers"
-          :items="anggota_organisasi_items"
-          :search="anggota_organisasi_search_value"
+          :headers="keanggotaan_headers"
+          :items="keanggotaan_items"
+          :search="keanggotaan_search_value"
           item-key="id_entri"
           class="elevation-1"
           sort-by="name">
@@ -390,7 +390,7 @@
             <v-toolbar
               flat
             >
-              <v-toolbar-title>Daftar Anggota Organisasi {{ keanggotaan_organisasi.nama_organisasi }}</v-toolbar-title>
+              <v-toolbar-title>Daftar Anggota</v-toolbar-title>
               <v-divider
                 class="mx-4"
                 inset
@@ -417,7 +417,7 @@
             </v-toolbar>
             <v-toolbar flat>
               <v-text-field
-              v-model="anggota_organisasi_search_value"
+              v-model="keanggotaan_search_value"
               append-icon="mdi-magnify"
               label="Cari anggota . . ."
               single-line
@@ -434,7 +434,7 @@
                 medium
                 class="ma-3"
                 color="primary darken-3"
-                @click="editAnggotaOrganisasi(item)"
+                @click="editAnggotaKeanggotaan(item)"
               >
                 mdi-account-edit
               </v-icon>
@@ -442,7 +442,7 @@
                 medium
                 class="ma-3"
                 color="red"
-                @click="deleteAnggotaOrganisasi(item)"
+                @click="deleteAnggotaKeanggotaan(item)"
               >
                 mdi-account-remove
               </v-icon>
@@ -457,7 +457,7 @@
   </v-dialog>
 
   <!-- DIALOG UNTUK tambah anggota -->
-  <v-dialog v-model="dialog_tambah_anggota_organisasi" persistent style="z-index:2005;">
+  <v-dialog v-model="dialog_tambah_anggota_keanggotaan" persistent style="z-index:2005;">
     <v-card>
       <v-card-title class="text-h5 primary darken-3">
         Cari anggota untuk {{ keanggotaan_organisasi.nama_organisasi }}
@@ -573,12 +573,16 @@
             </v-toolbar>
           </template> -->
           <template v-slot:item.actions="{ item }">
-            <v-btn v-if="item.keanggotaans.length == 0" color="primary darken-2">
-              <v-icon>mdi-account-plus</v-icon>Jadikan anggota
-            </v-btn>
-            <v-btn v-else color="error darken-2">
-              <v-icon>mdi-account-minus</v-icon>Hapus keanggotaan
-            </v-btn>
+            <div v-if="cekKeanggotaan(item) == true">
+              <v-btn color="primary darken-2" @click="submitAddAnggota(item)">
+                <v-icon>mdi-account-plus</v-icon>Jadikan anggota
+              </v-btn>
+            </div>
+            <div v-else>
+              <v-btn color="error darken-2" @click="submitDeleteAnggota(item)">
+                <v-icon>mdi-account-minus</v-icon>Hapus keanggotaan
+              </v-btn>
+            </div>
           </template>
           <template v-slot:no-data>
             NOT FOUND
@@ -591,15 +595,126 @@
       <v-divider></v-divider>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn
+        <!-- <v-btn
           class="mr-4"
           color="primary"
           @click="submitCreateDataOrganisasi"
         >
           submit anggota
+        </v-btn> -->
+
+        <v-btn @click="closeDialogAddAnggota">
+          close
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <!-- DIALOG untuk role anggota dari keanggotaan -->
+  <v-dialog v-model="dialog_role_anggota_keanggotaan" persistent style="z-index:2005;">
+    <v-card>
+      <v-card-title class="text-h5 primary darken-3">
+        Role untuk anggota
+      </v-card-title>
+          <v-card-text>
+            <v-container fluid>
+              <v-row v-if="keanggotaan.jenis_keanggotaan == 'organisasi'">
+                <v-col
+                  cols="12"
+                  sm="6"
+                  md="6">
+                  <v-checkbox
+                    v-model="role_anggota"
+                    label="Admin Organisasi"
+                    color="red darken-3"
+                    value="AdminOrganisasi"
+                    hide-details
+                  ></v-checkbox>
+                </v-col>
+                <v-col
+                  cols="12"
+                  sm="6"
+                  md="6"
+                >
+                  <v-checkbox
+                    v-model="role_anggota"
+                    label="Supervisor Organisasi"
+                    color="indigo darken-3"
+                    value="SupervisorOrganisasi"
+                    hide-details
+                  ></v-checkbox>
+                </v-col>
+              </v-row>
+
+              <v-row v-else-if="keanggotaan.jenis_keanggotaan == 'divisi'">
+                <v-col
+                  cols="12"
+                  sm="6"
+                  md="6">
+                  <v-checkbox
+                    v-model="role_anggota"
+                    label="Admin Divisi"
+                    color="red"
+                    value="AdminDivisi"
+                    hide-details
+                  ></v-checkbox>
+                </v-col>
+                <v-col
+                  cols="12"
+                  sm="6"
+                  md="6"
+                >
+                  <v-checkbox
+                    v-model="role_anggota"
+                    label="Supervisor Divisi"
+                    color="indigo"
+                    value="SupervisorDivisi"
+                    hide-details
+                  ></v-checkbox>
+                </v-col>
+              </v-row>
+
+              <v-row v-else>
+                <v-col
+                  cols="12"
+                  sm="6"
+                  md="6">
+                  <v-checkbox
+                    v-model="role_anggota"
+                    label="Admin Tim"
+                    color="red lighten-3"
+                    value="AdminTim"
+                    hide-details
+                  ></v-checkbox>
+                </v-col>
+                <v-col
+                  cols="12"
+                  sm="6"
+                  md="6"
+                >
+                  <v-checkbox
+                    v-model="role_anggota"
+                    label="Supervisor Tim"
+                    color="indigo lighten-3"
+                    value="SupervisorTim"
+                    hide-details
+                  ></v-checkbox>
+                </v-col>
+              </v-row>
+            </v-container>
+          </v-card-text>
+      <v-divider></v-divider>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn
+          class="mr-4"
+          color="primary"
+          @click="submitEditRoleAnggota"
+        >
+          submit role
         </v-btn>
 
-        <v-btn @click="dialog_tambah_anggota_organisasi = false">
+        <v-btn @click="closeDialogRoleAnggota">
           close
         </v-btn>
       </v-card-actions>
@@ -703,6 +818,14 @@
                   <v-icon
                     medium
                     class="ma-3"
+                    color="secondary darken-3"
+                    @click="konfigurasiKeanggotaan(item.id_tim, item.nama_tim,'tim', item.id_organisasi)"
+                  >
+                    mdi-account-cog-outline
+                  </v-icon>
+                  <v-icon
+                    medium
+                    class="ma-3"
                     color="red"
                     @click="deleteDataTim(item)"
                   >
@@ -785,6 +908,14 @@
                     @click="editDataDivisi(item)"
                   >
                     mdi-pencil
+                  </v-icon>
+                  <v-icon
+                    medium
+                    class="ma-3"
+                    color="secondary darken-3"
+                    @click="konfigurasiKeanggotaan(item.id_divisi, item.nama_divisi,'divisi', item.id_organisasi)"
+                  >
+                    mdi-account-cog-outline
                   </v-icon>
                   <v-icon
                     medium
@@ -876,7 +1007,7 @@
                     medium
                     class="ma-3"
                     color="secondary darken-3"
-                    @click="configMemberOrganisasi(item)"
+                    @click="konfigurasiKeanggotaan(item.id_organisasi, item.nama_organisasi,'organisasi', item.id_organisasi)"
                   >
                     mdi-account-cog-outline
                   </v-icon>
@@ -906,7 +1037,7 @@
       :color= warnaSnackbar
       style="z-index:2100">  
       {{ teksSnackbar }}
-    <template v-slot:action="{ attrs }">
+    <!-- <template v-slot:action="{ attrs }">
       <v-btn
         color="white"
         text
@@ -915,7 +1046,7 @@
       >
         Close
       </v-btn>
-    </template>
+    </template> -->
   </v-snackbar>
   </v-container>
 </template>
@@ -1129,11 +1260,17 @@
           logo_tim_new: null,
           logo_tim: '',
         },
-        dialog_keanggotaan_organisasi: false,
-        dialog_tambah_anggota_organisasi: false,
+        dialog_keanggotaan: false,
+        dialog_tambah_anggota_keanggotaan: false,
+        keanggotaan: {
+          nama_keanggotaan:'',
+          jenis_keanggotaan: '',
+          id_keanggotaan:'',
+          id_organisasi:''
+        },
         keanggotaan_organisasi: {},
-        anggota_organisasi_search_value:'',
-        anggota_organisasi_headers: [
+        keanggotaan_search_value:'',
+        keanggotaan_headers: [
           {
             text: 'Nama',
             value: 'name',
@@ -1143,7 +1280,7 @@
           { text: 'Terdaftarkan', value: 'created_at' },
           { text: 'Actions', value: 'actions_organisasi', sortable: false, width: '150px' },
         ],
-        anggota_organisasi_items: [],
+        keanggotaan_items: [],
         search_pengguna: '',
         search_tabel_daftar_pengguna: '',
         loading_pencarian: '',
@@ -1161,6 +1298,9 @@
           { text: 'Keanggotaan', value: 'keanggotaans'},
           { text: 'Actions', value: 'actions', sortable: false, width: '20%' },
         ],
+        dialog_role_anggota_keanggotaan: false,
+        role_anggota: [],
+        user_selected: {},
     }},
 
     computed: {
@@ -1277,6 +1417,210 @@
           this.overlay = false
         }
       },
+      async editAnggotaKeanggotaan(item){
+        this.overlay_text = 'Mengambil role user di keanggotaan . . .'
+        this.overlay = true
+        axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`
+        let url = `/api/take-keanggotaan/?id_user=${item.id}&id_keanggotaan=${this.keanggotaan.id_keanggotaan}&jenis_keanggotaan=${this.keanggotaan.jenis_keanggotaan}`
+        // console.log(url)
+        this.user_selected = item
+        await axios.get(url).then(response => {
+            if(response.data.status == true){
+              let data = response.data.data
+              let list_role = []
+              data.forEach(element => {
+                list_role.push(element['role_keanggotaan']);
+              })
+              this.role_anggota = list_role
+            }else{
+              console.log(response.data.message)
+            }
+        }).catch(errors => {
+            console.log(errors.response.data.errors)
+        }).finally(()=>{});
+        this.dialog_role_anggota_keanggotaan = true
+        this.overlay = false
+      },
+      async deleteAnggotaKeanggotaan(item){
+        this.overlay_text = 'Menghapus keanggotaan . . .'
+        this.overlay = true
+        await this.submitDeleteAnggota(item)
+        await this.konfigurasiKeanggotaan(this.keanggotaan.id_keanggotaan, this.keanggotaan.nama_keanggotaan, this.keanggotaan.jenis_keanggotaan, this.keanggotaan.id_organisasi)
+        this.overlay = false
+        this.overlay_text = 'Loading . . .'
+      },
+      async submitAddAnggota(user_add){
+        this.overlay = true
+        this.overlay_text = 'Memasukkan pengguna kedalam keanggotaan . . .'
+        const config = {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            }
+        }
+        var formData = new FormData();
+        // menambahkan data inovation kedalam form untuk di upload
+        formData.append('id_user', user_add.id);
+        formData.append('id_keanggotaan', this.keanggotaan.id_keanggotaan);
+        formData.append('jenis_keanggotaan', this.keanggotaan.jenis_keanggotaan);
+        formData.append('id_organisasi', this.keanggotaan.id_organisasi);
+        await axios.post("/api/create-keanggotaan",  formData, config).then(response => {
+          if(response.data.status = true){
+            this.teksSnackbar= response.data.message
+            this.warnaSnackbar= "primary darken-2"
+          }else{
+            this.teksSnackbar= "Terjadi Kesalahan : "+ (errors.response.data.message)
+            this.warnaSnackbar= "red"
+          }
+        }).catch(errors => {
+          this.teksSnackbar= "Terjadi Kesalahan : "+ (errors.response.data.errors["message"]),
+          this.warnaSnackbar= "red",
+          this.snackbar = true
+        }).finally(async () => {
+          this.overlay_text = 'Memaperbaharui data tampilan . . .'
+          let url = '/api/users/'+this.search_pengguna.toString()+`?jenis_keanggotaan=organisasi&id_keanggotaan=${this.keanggotaan_organisasi.id_organisasi}&keanggotaan_pengguna=tambah_anggota`
+          let refs = this
+          await axios.get(url).then((response) => {
+            refs.daftar_pengguna = response.data
+          }).catch(errors => {
+            console.log(errors)
+          }).finally(() => {
+            this.loading_pencarian = false
+            console.log('Berhasil')
+          });
+          this.overlay = false
+          // await this.konfigurasiKeanggotaan(this.keanggotaan.id_keanggotaan, this.keanggotaan.nama_keanggotaan, this.keanggotaan.jenis_keanggotaan)
+          this.snackbar = true
+        })
+      },
+      async submitDeleteAnggota(user_add){
+        this.overlay = true
+        this.overlay_text = 'Memasukkan pengguna kedalam keanggotaan . . .'
+        const config = {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            }
+        }
+        var formData = new FormData();
+        // menambahkan data inovation kedalam form untuk di upload
+        formData.append('id_user', user_add.id);
+        formData.append('id_keanggotaan', this.keanggotaan.id_keanggotaan);
+        formData.append('jenis_keanggotaan', this.keanggotaan.jenis_keanggotaan);
+        formData.append('id_organisasi', this.keanggotaan.id_organisasi);
+        // console.log(formData)
+        await axios.post("/api/delete-keanggotaan", formData, config).then(response => {
+          if(response.data.status = true){
+            this.teksSnackbar= response.data.message
+            this.warnaSnackbar= "primary darken-2"
+          }else{
+            this.teksSnackbar= "Terjadi Kesalahan : "+ (errors.response.data.message)
+            this.warnaSnackbar= "red"
+          }
+        }).catch(errors => {
+          this.teksSnackbar= "Terjadi Kesalahan : "+ (errors.response.data.errors["message"]),
+          this.warnaSnackbar= "red",
+          this.snackbar = true
+        }).finally(async () => {
+          this.overlay_text = 'Memperbaharui data tampilan . . .'
+          let url = '/api/users/'+this.search_pengguna.toString()+`?jenis_keanggotaan=organisasi&id_keanggotaan=${this.keanggotaan_organisasi.id_organisasi}&keanggotaan_pengguna=tambah_anggota`
+          let refs = this
+          await axios.get(url).then((response) => {
+            refs.daftar_pengguna = response.data
+          }).catch(errors => {
+            console.log(errors)
+          }).finally(() => {
+            this.loading_pencarian = false
+            console.log('Berhasil')
+          });
+          this.overlay = false
+          // await this.konfigurasiKeanggotaan(this.keanggotaan.id_keanggotaan, this.keanggotaan.nama_keanggotaan, this.keanggotaan.jenis_keanggotaan)
+          this.snackbar = true
+        })
+      },
+      async submitEditRoleAnggota(){
+        this.overlay = true
+        this.overlay_text = 'Mengubah role anggota . . .'
+        const config = {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            }
+        }
+        let user_temp = this.user_selected
+        var formData = new FormData();
+        // menambahkan data inovation kedalam form untuk di upload
+        formData.append('id_user', user_temp.id);
+        formData.append('id_keanggotaan', this.keanggotaan.id_keanggotaan);
+        formData.append('jenis_keanggotaan', this.keanggotaan.jenis_keanggotaan);
+        formData.append('role_keanggotaan', this.role_anggota);
+        console.log(this.role_anggota)
+        await axios.post("/api/update-keanggotaan",  formData, config).then(response => {
+          if(response.data.status = true){
+            this.teksSnackbar= response.data.message
+            this.warnaSnackbar= "primary darken-2"
+          }else{
+            this.teksSnackbar= "Terjadi Kesalahan : "+ (response.data.message)
+            this.warnaSnackbar= "red"
+          }
+        }).catch(errors => {
+          this.teksSnackbar= "Terjadi Kesalahan : "+ (errors)
+          this.warnaSnackbar= "red"
+          console.log(errors)
+        }).finally(() => {
+          this.overlay_text = 'Loading . . .'
+          this.overlay = false
+          this.snackbar = true
+        })
+      },
+      async konfigurasiKeanggotaan(id_keanggotaan, nama_keanggotaan, jenis_keanggotaan, id_organisasi){
+        this.keanggotaan = {
+          'id_keanggotaan' : id_keanggotaan,
+          'nama_keanggotaan' : nama_keanggotaan,
+          'jenis_keanggotaan' : jenis_keanggotaan,
+          'id_organisasi' : id_organisasi
+        }
+        this.overlay = true
+        this.overlay_text = "Ambil data anggota"
+        // this.keanggotaan_organisasi = item
+        axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
+        let url = '/api/users?id_keanggotaan='+id_keanggotaan+'&jenis_keanggotaan='+jenis_keanggotaan
+        // console.log(url)
+        await axios.get(url).then(response => {
+            this.keanggotaan_items = response.data
+        }).catch(errors => {
+          console.log(errors)
+        });
+        this.dialog_keanggotaan = true
+        this.overlay = false
+        this.overlay_text = 'Loading . . . '
+
+      },
+      cekKeanggotaan(item){
+        // console.log(item)
+        let check = true
+        item.keanggotaans.forEach(element => {
+          // print(element)
+          if(element.id_keanggotaan == this.keanggotaan.id_keanggotaan && element.jenis_keanggotaan == this.keanggotaan.jenis_keanggotaan){
+            // console.log('masuk')
+            check = false
+          }
+        });
+        return check
+      },
+      async closeDialogAddAnggota(){
+        this.overlay_text = "Memperbaharui daftar anggota"
+        this.overlay = true
+        await this.konfigurasiKeanggotaan(this.keanggotaan.id_keanggotaan, this.keanggotaan.nama_keanggotaan, this.keanggotaan.jenis_keanggotaan, this.keanggotaan.id_organisasi)
+        this.dialog_tambah_anggota_keanggotaan = false
+        this.daftar_pengguna = []
+        this.search_pengguna = ''
+        this.overlay = false
+      },
+      async closeDialogRoleAnggota(){
+        this.overlay_text = "Memperbaharui daftar anggota"
+        this.overlay = true
+        this.role_anggota = []
+        this.dialog_role_anggota_keanggotaan = false
+        this.overlay = false
+      },
       async onChangeOrganisasiTim(event) {
         this.overlay = true
         // console.log(event.target.value)
@@ -1302,6 +1646,13 @@
         }
         this.overlay = false
         this.overlay_text = 'Loading . . .'
+      },
+      addAnggotaOrganisasi(jenis_keanggotaan){
+        this.overlay_text = "Ambil data anggota dari organisaasi "+this.keanggotaan_organisasi.nama_organisasi
+        this.overlay = true
+        this.dialog_tambah_anggota_keanggotaan = true
+        this.overlay_text = 'Loading . . .'
+        this.overlay = false
       },
       close_dialog_delete () {
         this.dialogDelete = false
@@ -1433,30 +1784,6 @@
           this.edited_index_organisasi = -1
         })
       },
-      async configMemberOrganisasi(item){
-        this.overlay = true
-        this.overlay_text = "Ambil data anggota"
-        this.keanggotaan_organisasi = item
-        axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
-        await axios.get('/api/users/id_keanggotaan='+this.keanggotaan_organisasi.id_organisasi+'&jenis_keanggotaan=organisasi').then(response => {
-            this.users = response.data
-        }).catch(errors => {
-          console.log(errors)
-        });
-        this.dialog_keanggotaan_organisasi = true
-        this.overlay = false
-        this.overlay_text = 'Loading . . . '
-
-      },
-      addAnggotaOrganisasi(){
-        this.overlay_text = "Ambil data anggota dari organisaasi "+this.keanggotaan_organisasi.nama_organisasi
-        this.overlay = true
-        this.dialog_tambah_anggota_organisasi = true
-        this.overlay_text = 'Loading . . .'
-        this.overlay = false
-      },
-      editAnggotaOrganisasi(){},
-      deleteAnggotaOrganisasi(){},
       // fungsi terkait untuk pengelolaan divisi
       createDataDivisi(){
         this.overlay = true

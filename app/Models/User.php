@@ -49,4 +49,45 @@ class User extends Authenticatable
     public function keanggotaans(){
         return $this->hasMany(Keanggotaan::class, 'id_user', 'id');
     }
+
+    public function organisasis(){
+        $id = $this->attributes['id'];
+        $list_keanggotaan = [];
+        $data = Keanggotaan::select('id_keanggotaan')->where(['id_user' => $id,'jenis_keanggotaan' => 'organisasi'])->get();
+        foreach($data as $key => $value){
+            array_push($list_keanggotaan, $value['id_keanggotaan']);
+        }
+        // error_log(implode(',',$list_keanggotaan));
+        return $list_keanggotaan;
+    }
+
+    public function divisis(){
+        $id = $this->attributes['id'];
+        $list_keanggotaan = [];
+        $data = Keanggotaan::select('id_keanggotaan')->where(['id_user' => $id,'jenis_keanggotaan' => 'divisi'])->get();
+        foreach($data as $key => $value){
+            array_push($list_keanggotaan, $value['id_keanggotaan']);
+        }
+        return $list_keanggotaan;
+    }
+
+    public function tims(){
+        $id = $this->attributes['id'];
+        $list_keanggotaan = [];
+        $data = Keanggotaan::select('id_keanggotaan')->where(['id_user' => $id,'jenis_keanggotaan' => 'tim'])->get();
+        foreach($data as $key => $value){
+            array_push($list_keanggotaan, $value['id_keanggotaan']);
+        }
+        return $list_keanggotaan;
+    }
+
+    public function keanggotaan_by_role(String $role){
+        $id = $this->attributes['id'];
+        $list_keanggotaan = [];
+        $data = Keanggotaan::select('id_keanggotaan')->where(['id_user' => $id, 'role_keanggotaan' => $role])->get();
+        foreach($data as $key => $value){
+            array_push($list_keanggotaan, $value['id_keanggotaan']);
+        }
+        return $list_keanggotaan;
+    }
 }

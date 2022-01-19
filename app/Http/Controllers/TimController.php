@@ -52,7 +52,9 @@ class TimController extends Controller
     {
         //
         $logo_tim = [];
-        if(($request->user()->hasPermissionTo('users.create'))){
+        $status_keanggotaan_organisasi = in_array($request->id_organisasi, $request->user()->keanggotaan_by_role('AdminOrganisasi'));
+        $status_keanggotaan_divisi = $request->id_divisi == null ? false : in_array($request->id_divisi, $request->user()->keanggotaan_by_role('AdminDivisi'));
+        if(($status_keanggotaan_organisasi) || ($status_keanggotaan_divisi) || ($request->user()->hasRole(['SuperAdmin']))){
             $request->validate([
                 'nama_tim' => ['required', 'string'],
                 'id_organisasi' => ['required', 'string'],
@@ -126,8 +128,10 @@ class TimController extends Controller
     public function update(Request $request, Tim $tim = null)
     {
         //
-        error_log('masuk ke fungsi');
-        if((($request->user()->hasPermissionTo('users.update')) && ($request->user()->id_organisasi == $request->id_organisasi)) || ($request->user()->hasRole(['SuperAdmin']))){
+        $status_keanggotaan_organisasi = in_array($request->id_organisasi, $request->user()->keanggotaan_by_role('AdminOrganisasi'));
+        $status_keanggotaan_tim = in_array($request->id_tim, $request->user()->keanggotaan_by_role('AdminTim'));
+        $status_keanggotaan_divisi = $request->id_divisi == null ? false : in_array($request->id_divisi, $request->user()->keanggotaan_by_role('AdminDivisi'));
+        if(($status_keanggotaan_tim) || ($status_keanggotaan_organisasi) || ($status_keanggotaan_divisi) || ($request->user()->hasRole(['SuperAdmin']))){
             error_log('otw validasi');
             $request->validate([
                 'nama_tim' => ['required', 'string'],
@@ -188,7 +192,11 @@ class TimController extends Controller
     public function destroy(Request $request)
     {
         //
-        if((($request->user()->hasPermissionTo('users.delete')) && ($request->user()->id_organisasi == $request->id_organisasi)) || ($request->user()->hasRole(['SuperAdmin']))){
+        $status_keanggotaan_organisasi = in_array($request->id_organisasi, $request->user()->organisasis());
+        $status_keanggotaan_divisi = $request->id_divisi == null ? false : in_array($request->id_divisi, $request->user()->divisis());
+        $status_rbac_organisasi = $request->user()->hasRole(['AdminOrganisasi']);
+        $status_rbac_divisi = $request->user()->hasRole(['AdminDivisi']);
+        if(($status_keanggotaan_organisasi && $status_rbac_organisasi) || ($status_keanggotaan_divisi && $status_rbac_divisi) || ($request->user()->hasRole(['SuperAdmin']))){
             $id_tim = $request->id_tim;
             try{
                 Tim::where('id_tim', $id_tim)->delete();

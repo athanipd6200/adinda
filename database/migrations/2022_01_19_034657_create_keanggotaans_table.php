@@ -18,6 +18,8 @@ class CreateKeanggotaansTable extends Migration
             $table->integer('id_user');
             $table->uuid('id_keanggotaan')->nullable();
             $table->string('jenis_keanggotaan')->nullable();
+            $table->string('role_keanggotaan')->default('Member');
+            $table->string('permissions_keanggotaan')->nullable();
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
             $table->softDeletes();

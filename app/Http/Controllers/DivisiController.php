@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Divisi;
+use App\Models\Tim;
 use Illuminate\Http\Request;
 use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Carbon;
@@ -57,7 +58,8 @@ class DivisiController extends Controller
     {
         //
         $logo_divisi = [];
-        if(($request->user()->hasPermissionTo('users.create'))){
+        $status_keanggotaan = in_array($request->id_organisasi, $request->user()->keanggotaan_by_role('AdminOrganisasi'));
+        if(($status_keanggotaan) || ($request->user()->hasRole(['SuperAdmin'])) ){
             $request->validate([
                 'nama_divisi' => ['required', 'string'],
                 'id_organisasi' => ['required', 'string'],
@@ -130,7 +132,9 @@ class DivisiController extends Controller
      */
     public function update(Request $request, Divisi $divisi = null)
     {
-        if((($request->user()->hasPermissionTo('users.update')) && ($request->user()->id_organisasi == $request->id_organisasi)) || ($request->user()->hasRole(['SuperAdmin']))){
+        $status_keanggotaan_organisasi = in_array($request->id_organisasi, $request->user()->keanggotaan_by_role('AdminOrganisasi'));
+        $status_keanggotaan_divisi = in_array($request->id_divisi, $request->user()->keanggotaan_by_role('AdminDivisi'));
+        if(($status_keanggotaan_divisi) || ($status_keanggotaan_organisasi) || ($request->user()->hasRole(['SuperAdmin'])) ){
             $request->validate([
                 'nama_divisi' => ['required', 'string'],
                 'id_organisasi' => ['required', 'string'],
@@ -183,7 +187,8 @@ class DivisiController extends Controller
     public function destroy(Request $request)
     {
         //
-        if((($request->user()->hasPermissionTo('users.delete')) && ($request->user()->id_organisasi == $request->id_organisasi)) || ($request->user()->hasRole(['SuperAdmin']))){
+        $status_keanggotaan_organisasi = in_array($request->id_organisasi, $request->user()->keanggotaan_by_role('AdminOrganisasi'));
+        if(($status_keanggotaan_organisasi) || ($request->user()->hasRole(['SuperAdmin'])) ){
             $id_divisi = $request->id_divisi;
             try{
                 Divisi::where('id_divisi', $id_divisi)->delete();
