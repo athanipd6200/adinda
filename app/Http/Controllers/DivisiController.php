@@ -18,11 +18,18 @@ class DivisiController extends Controller
     {
         //
         try{
-            if($request->user()->hasRole('SuperAdmin')){
-                $divisis = Divisi::all();
+            if(($request->user()->hasRole('SuperAdmin')) && ($request->id_organisasi == null)){
+                // error_log('Masuk sebagai super admin');
+                $divisis = Divisi::with(['organisasi'])->get();
+                return response()->json(['status' => true, 'message' => "Berhasil ambil data divisi", 'data' => $divisis]);
+            }elseif($request->id_organisasi != null){
+                // error_log('Masuk sebagai API ngambil divisi');
+                $id_organisasi = $request->id_organisasi;
+                $divisis = Divisi::with(['organisasi'])->where('id_organisasi', $id_organisasi)->get();
                 return response()->json(['status' => true, 'message' => "Berhasil ambil data divisi", 'data' => $divisis]);
             }else{
-                $divisis = Divisi::where('id_organisasi', $request->user()->id_organisasi)->get();
+                // error_log('Masuk sebagai user');
+                $divisis = Divisi::with(['organisasi'])->where('id_organisasi', $request->user()->id_organisasi)->get();
                 return response()->json(['status' => true, 'message' => "Berhasil ambil data divisi", 'data' => $divisis]);
             }
         }catch (Exception $e) {
@@ -76,8 +83,8 @@ class DivisiController extends Controller
                     'id_divisi' => $id_divisi,
                     'id_organisasi' => $request->id_organisasi ,
                     'nama_divisi' => $nama_divisi ,
-                    'alamat_divisi' => $request->alamat_divisi ,
-                    'keterangan_divisi' => $request->keterangan_divisi,
+                    'alamat_divisi' => $request->alamat_divisi == null ? null : $request->alamat_divisi,
+                    'keterangan_divisi' => $request->keterangan_divisi == null ? null : $request->keterangan_divisi,
                     'created_by' => $request->user()->email ,
                     'updated_by' => $request->user()->email ,
                     'logo_divisi'=> count($logo_divisi) > 0 ? implode(",",$logo_divisi) : null,
@@ -121,9 +128,9 @@ class DivisiController extends Controller
      * @param  \App\Models\Divisi  $divisi
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Divisi $divisi)
+    public function update(Request $request, Divisi $divisi = null)
     {
-        if(($request->user()->hasPermissionTo('users.update')) && ($request->user()->id_organisasi == $request->id_organisasi)){
+        if((($request->user()->hasPermissionTo('users.update')) && ($request->user()->id_organisasi == $request->id_organisasi)) || ($request->user()->hasRole(['SuperAdmin']))){
             $request->validate([
                 'nama_divisi' => ['required', 'string'],
                 'id_organisasi' => ['required', 'string'],
@@ -150,13 +157,13 @@ class DivisiController extends Controller
                 $current_date_time = Carbon::now()->toDateTimeString(); 
                 $data_divisi = [
                     'nama_divisi' => $nama_divisi ,
-                    'alamat_divisi' => $request->alamat_divisi ,
-                    'keterangan_divisi' => $request->keterangan_divisi,
+                    'alamat_divisi' => $request->alamat_divisi == null ? null : $request->alamat_divisi,
+                    'keterangan_divisi' => $request->keterangan_divisi == null ? null : $request->keterangan_divisi,
                     'updated_by' => $request->user()->email ,
                     'logo_divisi'=> $logo_divisi_name,
                     'updated_at' => $current_date_time,
                 ];
-                Divisi::where('id_divisi', $id_divisi)->where('id_organisasi', $id_organisasi)->update($data_divisi);
+                Divisi::where('id_divisi', $id_divisi)->update($data_divisi);
             }catch (Exception $e) {
                 return response()->json(['status' => false, 'message' => $e->getMessage()]);
             }
@@ -176,16 +183,17 @@ class DivisiController extends Controller
     public function destroy(Request $request)
     {
         //
-        if($request->user()->hasRole('SuperAdmin')){
+        if((($request->user()->hasPermissionTo('users.delete')) && ($request->user()->id_organisasi == $request->id_organisasi)) || ($request->user()->hasRole(['SuperAdmin']))){
             $id_divisi = $request->id_divisi;
             try{
                 Divisi::where('id_divisi', $id_divisi)->delete();
+                Tim::where('id_divisi', $id_divisi)->update(['id_divisi' => null]);
             }catch (Exception $e) {
                 return response()->json(['status' => false, 'message' => $e->getMessage()]);
             }
         }else{
             return response()->json(['status' => false, 'message' => 'Tidak bisa diakses (Forbidden)']);
         }
-        return response()->json(['msg' => 'Sukses menghapus profil divisi']);
+        return response()->json(['status' => true, 'message' => 'Sukses menghapus profil divisi']);
     }
 }

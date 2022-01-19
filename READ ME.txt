@@ -1,5 +1,6 @@
 Aplikasi dapat dijalankan dengan docker:
 1. docker-compose up -d
 2. docker exec your_container_name php artisan migrate:fresh --seed
-3. Silahkan login dengan klik akun logo ADINDA atau logo BPS (default)
-4. email: admin@adinda.com pass: adindaadinda
+3. docker exec your_container_name php artisan db:seed --class=UsersTableSeeder
+4. Silahkan login dengan klik akun logo ADINDA atau logo BPS (default)
+5. email: admin@adinda.com pass: adindaadinda

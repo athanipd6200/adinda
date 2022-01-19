@@ -1,11 +1,13 @@
 <?php
 
+use App\Models\Keanggotaan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Illuminate\Support\Facades\DB;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -112,6 +114,7 @@ Route::get('infografis/{filename?}', function ($filename = null)
     return $response;
 });
 
+// routing API logo organisasi
 Route::get('logo_organisasi/{filename}', function ($filename)
 {
     // Add folder path here instead of storing in the database.
@@ -120,6 +123,46 @@ Route::get('logo_organisasi/{filename}', function ($filename)
 
     if (!File::exists($path)) {
         $path = $public_path . '/logo_organisasi/error.png';
+        // abort(404);
+    }
+
+    $file = File::get($path);
+    $type = File::mimeType($path);
+
+    $response = Response::make($file, 200);
+    $response->header("Content-Type", $type);
+
+    return $response;
+});
+// routing API logo divisi
+Route::get('logo_divisi/{filename}', function ($filename)
+{
+    // Add folder path here instead of storing in the database.
+    $public_path = public_path();
+    $path = $public_path . '/logo_divisi/' . $filename;
+
+    if (!File::exists($path)) {
+        $path = $public_path . '/logo_divisi/error.png';
+        // abort(404);
+    }
+
+    $file = File::get($path);
+    $type = File::mimeType($path);
+
+    $response = Response::make($file, 200);
+    $response->header("Content-Type", $type);
+
+    return $response;
+});
+// routing API logo tim
+Route::get('logo_tim/{filename}', function ($filename)
+{
+    // Add folder path here instead of storing in the database.
+    $public_path = public_path();
+    $path = $public_path . '/logo_tim/' . $filename;
+
+    if (!File::exists($path)) {
+        $path = $public_path . '/logo_tim/error.png';
         // abort(404);
     }
 
@@ -254,10 +297,21 @@ Route::post('/verification-artikel', [App\Http\Controllers\ArtikelController::cl
 // router untuk user
 Route::middleware('auth:sanctum')->get('/users/{search?}', function (Request $request, String $search = null) {
     $users = [];
-    if($request->user()->hasPermissionTo('users.read')){
+    if($request->user() != null && $request->user()->hasPermissionTo('users.read')){
         if($search == null){
             $users = User::all();
             return response($users, 200);
+        }elseif($request->keanggotaan_pengguna == 'tambah_anggota' && $request->id_keanggotaan != null && $request->jenis_keanggotaan != null){
+            $id_keanggotaan = $request->id_keanggotaan;
+            $jenis_keanggotaan = $request->jenis_keanggotaan;
+            $keanggotaan = User::with(['keanggotaans'])->where('users.name', 'like', '%'.$search.'%')->get();
+            return response($keanggotaan, 200);
+        }elseif($request->id_keanggotaan != null && $request->jenis_keanggotaan != null){
+            $id_keanggotaan = $request->id_keanggotaan;
+            $jenis_keanggotaan = $request->jenis_keanggotaan;
+            // $keanggotaan = Keanggotaan::with(['users'])->where('id_keanggotaan', $id_keanggotaan)->where('jenis_keanggotaan', $jenis_keanggotaan)->get();
+            $keanggotaan = DB::table('keanggotaans')->join('users', 'keanggotaans.user.id', '=', 'users.id')->where('keanggotaan', $jenis_keanggotaan)->where('id_keanggotaan', $id_keanggotaan)->get();
+            return response($keanggotaan, 200);
         }else{
             $users = User::where('name', 'like', '%'.$search.'%')->get();
             return response($users, 200);
@@ -299,16 +353,16 @@ Route::get('/take-organisasi/{id_organisasi?}', [App\Http\Controllers\Organisasi
 
 // router untuk divisi
 Route::post('/create-divisi', [App\Http\Controllers\DivisiController::class, 'store'])->middleware('auth:sanctum');
-Route::get('/read-divisi', [App\Http\Controllers\DivisiController::class, 'index'])->middleware('auth:sanctum');
+Route::get('/read-divisi/{id_organisasi?}', [App\Http\Controllers\DivisiController::class, 'index'])->middleware('auth:sanctum');
 Route::post('/delete-divisi', [App\Http\Controllers\DivisiController::class, 'destroy'])->middleware('auth:sanctum');
-Route::post('/update-divisi', [App\Http\Controllers\DivisiController::class, 'update']);
+Route::post('/update-divisi', [App\Http\Controllers\DivisiController::class, 'update'])->middleware('auth:sanctum');
 Route::get('/take-divisi/{id_divisi?}', [App\Http\Controllers\DivisiController::class, 'show'])->middleware('auth:sanctum');
 
 // router untuk organisasi
 Route::post('/create-tim', [App\Http\Controllers\TimController::class, 'store'])->middleware('auth:sanctum');
 Route::get('/read-tim', [App\Http\Controllers\TimController::class, 'index'])->middleware('auth:sanctum');
 Route::post('/delete-tim', [App\Http\Controllers\TimController::class, 'destroy'])->middleware('auth:sanctum');
-Route::post('/update-tim', [App\Http\Controllers\TimController::class, 'update']);
+Route::post('/update-tim', [App\Http\Controllers\TimController::class, 'update'])->middleware('auth:sanctum');
 Route::get('/take-tim/{id_tim?}', [App\Http\Controllers\TimController::class, 'show'])->middleware('auth:sanctum');
 
 // router error

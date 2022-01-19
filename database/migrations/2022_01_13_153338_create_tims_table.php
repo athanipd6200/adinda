@@ -22,6 +22,8 @@ class CreateTimsTable extends Migration
             $table->string('logo_tim')->nullable();
             $table->string('alamat_tim')->nullable();
             $table->mediumText('keterangan_tim')->nullable();
+            $table->string('created_by')->nullable();
+            $table->string('updated_by')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

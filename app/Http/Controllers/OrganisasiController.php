@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Divisi;
 use App\Models\Organisasi;
+use App\Models\Tim;
 use Illuminate\Http\Request;
 use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Carbon;
@@ -192,12 +194,14 @@ class OrganisasiController extends Controller
             $id_organisasi = $request->id_organisasi;
             try{
                 Organisasi::where('id_organisasi', $id_organisasi)->delete();
+                Divisi::where('id_organisasi', $id_organisasi)->update(['id_organisasi' => null]);
+                Tim::where('id_organisasi', $id_organisasi)->update(['id_organisasi' => null]);
             }catch (Exception $e) {
                 return response()->json(['status' => false, 'message' => $e->getMessage()]);
             }
         }else{
             return response()->json(['status' => false, 'message' => 'Tidak bisa diakses (Forbidden)']);
         }
-        return response()->json(['msg' => 'Sukses menghapus profil organisasi']);
+        return response()->json(['status' => true, 'message' => 'Sukses menghapus profil organisasi']);
     }
 }

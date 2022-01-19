@@ -1,6 +1,14 @@
 <template>
   <v-container>
-  <v-overlay :value="overlay" style="z-index:7000;"></v-overlay>
+  <v-overlay :value="overlay" style="z-index:7100;content-align:center;text-align:center;">
+    <v-progress-circular
+      indeterminate
+      size="64"
+    ></v-progress-circular>
+    <p class="text-center">
+      {{ overlay_text }}
+    </p>
+  </v-overlay>
   <!-- DIALOG UNTUK KONFIRMASI HAPUS -->
   <v-dialog v-model="dialogUserCreate" persistent style="z-index:2001;">
     <v-card>
@@ -446,6 +454,7 @@
         show1:false,
         currentUser: {},
         overlay: true,
+        overlay_text: 'Loading  . . .',
         singleExpand: false,
         drawer: false,
         dialog: false,
@@ -527,9 +536,10 @@
       },
     },
 
-    created () {
+    async created () {
+      this.overlay = true
       axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
-      axios.get('/api/user-permission').then(response => {
+      await axios.get('/api/user-permission').then(response => {
           this.currentUser = response.data.user;
           this.$store.commit('updateRBAC', response.data.permissions)
           if(!(response.data.permissions).includes('users.create')){
@@ -540,51 +550,48 @@
       }).finally(() => {
           this.permissions = this.$store.getters.rbac
       })
-      this.overlay = true;
-      this.initialize()
     },
 
-    mounted () {
+    async mounted () {
+      await this.initialize()
       axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
       setTimeout(() => this.overlay = false, 1500);
+      this.overlay = false
     },
 
     methods: {
-      initialize () {
-        this.overlay = true;
+      async initialize () {
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
-        axios.get('/api/users').then(response => {
+        await axios.get('/api/users').then(response => {
             this.users = response.data
         }).catch(errors => {
-
+          console.log(errors)
         });
-        this.overlay = true;
       },
       activate (item){
         alert(item)
       },
 
-      submit () {
+      async submit () {
         this.$refs.observer.validate()
         this.overlay = true
         this.isLoading = "white"
-        axios.post("/api/register", this.form).then(response => {
+        await axios.post("/api/register", this.form).then(response => {
           this.dialogUserCreate = false
           console.log(response.data)
-          this.teksSnackbar= "Berhasil menambahkan akun ",
-          this.warnaSnackbar= "primary",
-          this.snackbar = true
+          this.teksSnackbar= "Berhasil menambahkan akun "
+          this.warnaSnackbar= "primary"
           this.clear_form()
         }).catch(errors => {
           console.log(errors.response.data.errors)
           this.teksSnackbar= "Terjadi Kesalahan : "+ (errors.response.data.errors["message"]),
-          this.warnaSnackbar= "red",
-          this.snackbar = true
-        }).finally(() => {
+          this.warnaSnackbar= "red"
+        }).finally(async () => {
           this.isLoading = false
+          await this.initialize()
+          this.overlay = false
+          this.snackbar = true
         })
-        this.initialize()
-        this.overlay = false
       },
       clear_form () {
         this.form.name = ''
@@ -634,11 +641,11 @@
         this.closeDelete()
       },
 
-      rbacItem(item){
+      async rbacItem(item){
         this.overlay = true
         var refs = this
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
-        axios.get('/api/get-permissions/'+item.id).then(response => {
+        await axios.get('/api/get-permissions/'+item.id).then(response => {
           refs.user = item
           if(response.data.status == true){
             refs.user.permissions = response.data
@@ -651,7 +658,6 @@
             this.warnaSnackbar= "red",
             this.snackbar = true
           }
-          
         }).catch(errors => {
           console.log(errors)
         }).finally(() => {
@@ -660,7 +666,7 @@
         })
       },
 
-      submitRBAC(){
+      async submitRBAC(){
         // console.log(this.permission_selected)
         var permissions_temp = [];
         for (const val of this.permission_selected) { // You can use `let` instead of `const` if you like
@@ -681,30 +687,26 @@
         this.isLoading = "white"
         console.log(permissions_temp)
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
-        axios.post("/api/add-permissions/"+this.user.id, formData, config).then(response => {
+        await axios.post("/api/add-permissions/"+this.user.id, formData, config).then(response => {
           this.dialogUserCreate = false
           console.log(response.data)
           if(response.data.status == true){
             this.teksSnackbar= "Berhasil mengedit permission ",
-            this.warnaSnackbar= "primary",
-            this.snackbar = true
+            this.warnaSnackbar= "primary"
           }else{
             this.teksSnackbar= "Terjadi Kesalahan : "+ (JSON.stringify(response.data)),
-            this.warnaSnackbar= "red",
-            this.snackbar = true
+            this.warnaSnackbar= "red"
           }
-          
         }).catch(errors => {
           console.log(errors)
           this.teksSnackbar= "Terjadi Kesalahan : "+ (errors.response.data.message),
-          this.warnaSnackbar= "red",
-          this.snackbar = true
-        }).finally(() => {
+          this.warnaSnackbar= "red"
+        }).finally(async () => {
           this.isLoading = false
+          await this.initialize()
+          this.overlay = false
+          this.snackbar = true
         })
-        this.initialize()
-        this.overlay = false
-
       },
 
       close () {
@@ -723,10 +725,10 @@
         })
       },
 
-      save () {
+      async save () {
         if (this.editedIndex > -1) {
           Object.assign(this.users[this.editedIndex], this.editedItem)
-          axios.post("/api/structural_edit", this.editedItem).then(response => {
+          await axios.post("/api/structural_edit", this.editedItem).then(response => {
             console.log(response.data)
             // this.teksSnackbar= "Berhasil login ",
             // this.warnaSnackbar= "primary",
@@ -735,14 +737,14 @@
           }).catch(errors => {
             console.log(errors.response.data.errors)
             // this.errors = errors.response.data.errors
-          }).finally(() => {
+          }).finally(async () => {
             this.isLoading = false
+            await this.initialize()
+            this.close()
           })
         } else {
           this.users.push(this.editedItem)
         }
-        this.initialize()
-        this.close()
       },
     },
   }

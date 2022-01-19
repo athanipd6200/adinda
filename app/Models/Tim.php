@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+// use App\Models\Organisasi;
+// use App\Models\Divisi;
 
 class Tim extends Model
 {
@@ -18,6 +20,9 @@ class Tim extends Model
         'alamat_tim',
         'logo_tim',
         'keterangan_tim',
+        'updated_by',
+        'created_by',
+        'updated_at',
     ];
 
     protected $table = 'tims';

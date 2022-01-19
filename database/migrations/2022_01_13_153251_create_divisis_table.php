@@ -15,14 +15,17 @@ class CreateDivisisTable extends Migration
     {
         Schema::create('divisis', function (Blueprint $table) {
             $table->id('id_entri');
-            $table->string('id_organisasi')->nullable();
-            $table->string('id_divisi')->nullable();
+            $table->uuid('id_organisasi')->nullable();
+            $table->uuid('id_divisi')->nullable();
             $table->string('nama_divisi')->nullable();
             $table->string('alamat_divisi')->nullable();
             $table->string('logo_divisi')->nullable();
             $table->mediumText('keterangan_divisi')->nullable();
+            $table->string('created_by')->nullable();
+            $table->string('updated_by')->nullable();
             $table->softDeletes();
             $table->timestamps();
+
         });
     }
 

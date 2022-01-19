@@ -21,8 +21,9 @@ class CreateUsersTable extends Migration
             $table->string('status_account')->default('active');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('id_organisasi')->nullable();
-            $table->string('id_sub_organisasi')->nullable();
+            // $table->mediumText('id_organisasi')->nullable();
+            // $table->mediumText('id_divisi')->nullable();
+            // $table->mediumText('id_tim')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

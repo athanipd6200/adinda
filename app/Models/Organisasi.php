@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+// use App\Models\Tim;
+// use App\Models\Divisi;
 
 class Organisasi extends Model
 {
@@ -29,5 +31,9 @@ class Organisasi extends Model
 
     public function tims(){
         return $this->hasMany(Tim::class, 'id_organisasi', 'id_organisasi');
+    }
+
+    public function komponens(){
+        return $this->hasMany(Komponen::class, 'id_organisasi', 'id_organisasi')->where('komponens.jenis_komponen', '=', 'organisasi');
     }
 }

@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+// use App\Models\Organisasi;
+// use App\Models\Tim;
 
 class Divisi extends Model
 {
@@ -17,6 +19,9 @@ class Divisi extends Model
         'alamat_divisi',
         'logo_divisi',
         'keterangan_divisi',
+        'updated_by',
+        'created_by',
+        'updated_at',
     ];
 
     protected $table = 'divisis';
@@ -27,6 +32,6 @@ class Divisi extends Model
     }
 
     public function tims(){
-        return $this->hasMany(Organisasi::class, 'id_tim', 'id_tim');
+        return $this->hasMany(Tim::class, 'id_tim', 'id_tim');
     }
 }

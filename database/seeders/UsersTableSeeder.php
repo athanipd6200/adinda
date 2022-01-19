@@ -65,6 +65,8 @@ class UsersTableSeeder extends Seeder
         $inovation_verification = Permission::create(['name' => 'inovations.verification', 'guard_name' => 'web']);
 
         $permissions = ['inovations.create', 'inovations.read', 'inovations.update', 'inovations.delete', 'inovations.publish', 'inovations.unpublish', 'inovations.restore', 'inovations.verification', 'articles.create', 'articles.read', 'articles.update', 'articles.delete', 'articles.publish', 'articles.unpublish', 'articles.restore', 'articles.verification', 'users.create', 'users.update', 'users.read', 'users.delete', 'users.ban', 'users.unban', 'users.restore', 'users.verification'];
+        $admin_permissions = ['inovations.create', 'inovations.read', 'inovations.update', 'inovations.delete', 'inovations.publish', 'inovations.unpublish', 'inovations.restore', 'inovations.verification', 'articles.create', 'articles.read', 'articles.update', 'articles.delete', 'articles.publish', 'articles.unpublish', 'articles.restore', 'articles.verification', 'users.create', 'users.update', 'users.read', 'users.delete', 'users.ban', 'users.unban', 'users.restore', 'users.verification'];
         $superadmin->syncPermissions($permissions);
+        $admin->syncPermissions($admin_permissions);
     }
 }

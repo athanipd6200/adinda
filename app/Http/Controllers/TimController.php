@@ -16,13 +16,15 @@ class TimController extends Controller
      */
     public function index(Request $request)
     {
+        // $tims = Tim::with(['divisi','organisasi'])->get();
+        // return response()->json(['status' => true, 'message' => "Berhasil mengambil data tim", 'data' => $tims]);
         //
         try{
             if($request->user()->hasRole('SuperAdmin')){
-                $tims = Tim::all();
+                $tims = Tim::with(['divisi','organisasi'])->get();
                 return response()->json(['status' => true, 'message' => "Berhasil mengambil data tim", 'data' => $tims]);
             }else{
-                $tims = Tim::where('id_organisasi', $request->user()->id_organisasi)->get();
+                $tims = Tim::with(['divisi','organisasi'])->where('id_organisasi', $request->user()->id_organisasi)->get();
                 return response()->json(['status' => true, 'message' => "Berhasil mengambil data tim", 'data' => $tims]);
             }
         }catch (Exception $e) {
@@ -60,10 +62,11 @@ class TimController extends Controller
                 'logo_tim' => ['nullable'],
             ]);
             try{
-                $nama_tim = strtoupper($request->nama_tim);
+                // $nama_tim = strtoupper($requet->nama_tim);
+                $nama_tim = $request->nama_tim;
                 $id_tim = Uuid::uuid4()->toString();
-                if($request->hasfile('logo_tim')){
-                    $file = $request->file('logo_tim');
+                if($request->hasfile('logo_tim_new')){
+                    $file = $request->file('logo_tim_new');
                     $name = '['.$id_tim.'] '.$nama_tim.'.'.$file->extension();
                     $file->move(public_path().'/logo_tim/', $name);
                     $logo_tim[] = $name;
@@ -73,10 +76,10 @@ class TimController extends Controller
                 Tim::create([
                     'id_tim' => $id_tim,
                     'id_organisasi' => $request->id_organisasi ,
-                    'id_divisi' => $request->id_divisi ,
+                    'id_divisi' => $request->id_divisi == null ? null : $request->id_divisi,
                     'nama_tim' => $nama_tim ,
-                    'alamat_tim' => $request->alamat_tim ,
-                    'keterangan_tim' => $request->keterangan_tim,
+                    'alamat_tim' => $request->alamat_tim == null ? null : $request->alamat_tim,
+                    'keterangan_tim' => $request->keterangan_tim == null ? null : $request->keterangan_tim,
                     'created_by' => $request->user()->email ,
                     'updated_by' => $request->user()->email ,
                     'logo_tim'=> count($logo_tim) > 0 ? implode(",",$logo_tim) : null,
@@ -120,10 +123,12 @@ class TimController extends Controller
      * @param  \App\Models\Tim  $tim
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Tim $tim)
+    public function update(Request $request, Tim $tim = null)
     {
         //
-        if(($request->user()->hasPermissionTo('users.update')) && ($request->user()->id_organisasi == $request->id_organisasi)){
+        error_log('masuk ke fungsi');
+        if((($request->user()->hasPermissionTo('users.update')) && ($request->user()->id_organisasi == $request->id_organisasi)) || ($request->user()->hasRole(['SuperAdmin']))){
+            error_log('otw validasi');
             $request->validate([
                 'nama_tim' => ['required', 'string'],
                 'id_organisasi' => ['required', 'string'],
@@ -133,9 +138,12 @@ class TimController extends Controller
                 'logo_tim_new' => ['nullable'],
             ]);
             $logo_tim_name = '';
+            error_log('otw input');
             try{
                 $id_tim = $request->id_tim;
-                $nama_tim = strtoupper($request->nama_tim);
+                // $nama_tim = strtoupper($request->nama_tim);
+                $nama_tim = $request->nama_tim;
+                error_log('otw cek logo');
                 if($request->hasfile('logo_tim_new')){
                     $mask = public_path().'/logo_tim/'.'['.$id_tim.'] '.'*.*';
                     array_map('unlink', glob($mask));
@@ -148,18 +156,21 @@ class TimController extends Controller
                 }
 
                 $current_date_time = Carbon::now()->toDateTimeString(); 
+                error_log('otw bikin data');
                 $data_tim = [
                     'nama_tim' => $nama_tim ,
                     'id_organisasi' => $request->id_organisasi ,
-                    'id_divisi' => $request->id_divisi ,
-                    'alamat_tim' => $request->alamat_tim ,
-                    'keterangan_tim' => $request->keterangan_tim,
+                    'id_divisi' => $request->id_divisi == null ? null : $request->id_divisi,
+                    'alamat_tim' => $request->alamat_tim == null ? null : $request->alamat_tim,
+                    'keterangan_tim' => $request->keterangan_tim == null ? null : $request->keterangan_tim,
                     'updated_by' => $request->user()->email ,
                     'logo_tim'=> $logo_tim_name,
                     'updated_at' => $current_date_time,
                 ];
+                error_log('otw submit data');
                 Tim::where('id_tim', $id_tim)->update($data_tim);
             }catch (Exception $e) {
+                error_log('error dung');
                 return response()->json(['status' => false, 'message' => $e->getMessage()]);
             }
         }else{
@@ -177,7 +188,7 @@ class TimController extends Controller
     public function destroy(Request $request)
     {
         //
-        if($request->user()->hasRole('SuperAdmin')){
+        if((($request->user()->hasPermissionTo('users.delete')) && ($request->user()->id_organisasi == $request->id_organisasi)) || ($request->user()->hasRole(['SuperAdmin']))){
             $id_tim = $request->id_tim;
             try{
                 Tim::where('id_tim', $id_tim)->delete();
@@ -187,6 +198,6 @@ class TimController extends Controller
         }else{
             return response()->json(['status' => false, 'message' => 'Tidak bisa diakses (Forbidden)']);
         }
-        return response()->json(['msg' => 'Sukses menghapus profil tim']);
+        return response()->json(['status' => true, 'message' => 'Sukses menghapus profil tim']);
     }
 }
