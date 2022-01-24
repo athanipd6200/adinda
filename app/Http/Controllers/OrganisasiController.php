@@ -36,7 +36,9 @@ class OrganisasiController extends Controller
                 return response()->json(['status' => true, 'message' => "Berhasil ambil data organisasi", 'data' => $organizations]);
             }else{
                 // error_log('Common');
-                $organizations = Organisasi::where('id_organisasi', $request->user()->id_organisasi)->get();
+                $keanggotaan_organisasi = $request->user()->organisasis();
+                // error_log(implode(',',$keanggotaan_organisasi));
+                $organizations = Organisasi::whereIn('id_organisasi', $keanggotaan_organisasi)->get();
                 return response()->json(['status' => true, 'message' => "Berhasil ambil data organisasi", 'data' => $organizations]);
             }
         }catch (Exception $e) {

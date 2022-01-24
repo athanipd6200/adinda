@@ -136,6 +136,7 @@
                 item-value="id_organisasi"
                 label="Pilih Organisasi"
                 prepend-icon="mdi-office-building"
+                :disabled="divisi.jenis_keanggotaan != null"
                 required
               ></v-select>
             </validation-provider>
@@ -255,6 +256,7 @@
                 prepend-icon="mdi-office-building"
                 @change="onChangeOrganisasiTim"
                 required
+                :disabled="divisi.jenis_keanggotaan != null"
               ></v-select>
             </validation-provider>
 
@@ -270,6 +272,7 @@
                 item-value="id_divisi"
                 label="Pilih Divisi"
                 prepend-icon="mdi-home-modern"
+                :disabled="divisi.jenis_keanggotaan != null"
               ></v-select>
             </validation-provider>
 
@@ -430,22 +433,18 @@
           </template>
           <template v-slot:item.actions_organisasi="{ item }">
             <div>
-              <v-icon
-                medium
-                class="ma-3"
-                color="primary darken-3"
-                @click="editAnggotaKeanggotaan(item)"
-              >
-                mdi-account-edit
-              </v-icon>
-              <v-icon
-                medium
-                class="ma-3"
-                color="red"
-                @click="deleteAnggotaKeanggotaan(item)"
-              >
-                mdi-account-remove
-              </v-icon>
+              <v-btn color="primary darken-3" class="ma-3" @click="editAnggotaKeanggotaan(item)">
+                <v-icon medium>
+                  mdi-account-edit
+                </v-icon>
+                Hak Akses Anggota
+              </v-btn>
+              <v-btn class="ma-3" color="red" @click="deleteAnggotaKeanggotaan(item)">
+                <v-icon medium >
+                  mdi-account-remove
+                </v-icon>
+                Hapus Keanggotaan
+              </v-btn>
             </div>
           </template>
           <template v-slot:no-data>
@@ -587,8 +586,8 @@
           <template v-slot:no-data>
             NOT FOUND
           </template>
-          <template v-slot:item.keanggotaans="{ item }">
-            {{ item.keanggotaans.length == 0 ? 'Tidak ada anggota' : 'Ada keanggotaan' }}
+          <template v-slot:item.created_at="{ item }">
+            {{ new Date(item.created_at).toUTCString() }}
           </template>
         </v-data-table>
       </v-card-text>
@@ -618,6 +617,7 @@
       </v-card-title>
           <v-card-text>
             <v-container fluid>
+              <!-- role organisasi -->
               <v-row v-if="keanggotaan.jenis_keanggotaan == 'organisasi'">
                 <v-col
                   cols="12"
@@ -639,13 +639,66 @@
                   <v-checkbox
                     v-model="role_anggota"
                     label="Supervisor Organisasi"
-                    color="indigo darken-3"
+                    color="red lighten-3"
                     value="SupervisorOrganisasi"
+                    hide-details
+                  ></v-checkbox>
+                </v-col>
+                <v-col
+                  cols="12"
+                  sm="6"
+                  md="6"
+                >
+                  <v-checkbox
+                    v-model="role_anggota"
+                    label="Penulis Konten Inovasi Organisasi"
+                    color="indigo darken-3"
+                    value="PenulisInovasiOrganisasi"
+                    hide-details
+                  ></v-checkbox>
+                </v-col>
+                <v-col
+                  cols="12"
+                  sm="6"
+                  md="6"
+                >
+                  <v-checkbox
+                    v-model="role_anggota"
+                    label="Penyunting Konten Inovasi Organisasi"
+                    color="indigo lighten-3"
+                    value="PenyuntingInovasiOrganisasi"
+                    hide-details
+                  ></v-checkbox>
+                </v-col>
+                <v-col
+                  cols="12"
+                  sm="6"
+                  md="6"
+                >
+                  <v-checkbox
+                    v-model="role_anggota"
+                    label="Penulis Konten Artikel Organisasi"
+                    color="green darken-3"
+                    value="PenulisArtikelOrganisasi"
+                    hide-details
+                  ></v-checkbox>
+                </v-col>
+                <v-col
+                  cols="12"
+                  sm="6"
+                  md="6"
+                >
+                  <v-checkbox
+                    v-model="role_anggota"
+                    label="Penyunting Konten Artikel Organisasi"
+                    color="green lighten-3"
+                    value="PenyuntingArtikelOrganisasi"
                     hide-details
                   ></v-checkbox>
                 </v-col>
               </v-row>
 
+              <!-- role divisi -->
               <v-row v-else-if="keanggotaan.jenis_keanggotaan == 'divisi'">
                 <v-col
                   cols="12"
@@ -654,7 +707,7 @@
                   <v-checkbox
                     v-model="role_anggota"
                     label="Admin Divisi"
-                    color="red"
+                    color="red darken-3"
                     value="AdminDivisi"
                     hide-details
                   ></v-checkbox>
@@ -667,13 +720,66 @@
                   <v-checkbox
                     v-model="role_anggota"
                     label="Supervisor Divisi"
-                    color="indigo"
+                    color="red lighten-3"
                     value="SupervisorDivisi"
+                    hide-details
+                  ></v-checkbox>
+                </v-col>
+                <v-col
+                  cols="12"
+                  sm="6"
+                  md="6"
+                >
+                  <v-checkbox
+                    v-model="role_anggota"
+                    label="Penulis Konten Inovasi Divisi"
+                    color="indigo darken-3"
+                    value="PenulisInovasiDivisi"
+                    hide-details
+                  ></v-checkbox>
+                </v-col>
+                <v-col
+                  cols="12"
+                  sm="6"
+                  md="6"
+                >
+                  <v-checkbox
+                    v-model="role_anggota"
+                    label="Penyunting Konten Inovasi Divisi"
+                    color="indigo lighten-3"
+                    value="PenyuntingInovasiDivisi"
+                    hide-details
+                  ></v-checkbox>
+                </v-col>
+                <v-col
+                  cols="12"
+                  sm="6"
+                  md="6"
+                >
+                  <v-checkbox
+                    v-model="role_anggota"
+                    label="Penulis Konten Artikel Divisi"
+                    color="green darken-3"
+                    value="PenulisArtikelDivisi"
+                    hide-details
+                  ></v-checkbox>
+                </v-col>
+                <v-col
+                  cols="12"
+                  sm="6"
+                  md="6"
+                >
+                  <v-checkbox
+                    v-model="role_anggota"
+                    label="Penyunting Konten Artikel Divisi"
+                    color="green lighten-3"
+                    value="PenyuntingArtikelDivisi"
                     hide-details
                   ></v-checkbox>
                 </v-col>
               </v-row>
 
+              <!-- role tim -->
               <v-row v-else>
                 <v-col
                   cols="12"
@@ -682,7 +788,7 @@
                   <v-checkbox
                     v-model="role_anggota"
                     label="Admin Tim"
-                    color="red lighten-3"
+                    color="red darken-3"
                     value="AdminTim"
                     hide-details
                   ></v-checkbox>
@@ -695,8 +801,60 @@
                   <v-checkbox
                     v-model="role_anggota"
                     label="Supervisor Tim"
-                    color="indigo lighten-3"
+                    color="red lighten-3"
                     value="SupervisorTim"
+                    hide-details
+                  ></v-checkbox>
+                </v-col>
+                <v-col
+                  cols="12"
+                  sm="6"
+                  md="6"
+                >
+                  <v-checkbox
+                    v-model="role_anggota"
+                    label="Penulis Konten Inovasi Tim"
+                    color="indigo darken-3"
+                    value="PenulisInovasiTim"
+                    hide-details
+                  ></v-checkbox>
+                </v-col>
+                <v-col
+                  cols="12"
+                  sm="6"
+                  md="6"
+                >
+                  <v-checkbox
+                    v-model="role_anggota"
+                    label="Penyunting Konten Inovasi Tim"
+                    color="indigo lighten-3"
+                    value="PenyuntingInovasiTim"
+                    hide-details
+                  ></v-checkbox>
+                </v-col>
+                <v-col
+                  cols="12"
+                  sm="6"
+                  md="6"
+                >
+                  <v-checkbox
+                    v-model="role_anggota"
+                    label="Penulis Konten Artikel Tim"
+                    color="green darken-3"
+                    value="PenulisArtikelTim"
+                    hide-details
+                  ></v-checkbox>
+                </v-col>
+                <v-col
+                  cols="12"
+                  sm="6"
+                  md="6"
+                >
+                  <v-checkbox
+                    v-model="role_anggota"
+                    label="Penyunting Konten Artikel Tim"
+                    color="green lighten-3"
+                    value="PenyuntingArtikelTim"
                     hide-details
                   ></v-checkbox>
                 </v-col>
@@ -807,30 +965,32 @@
               </template>
               <template v-slot:item.actions_tim="{ item }">
                 <div>
-                  <v-icon
-                    medium
-                    class="ma-3"
-                    color="primary darken-3"
-                    @click="editDataTim(item)"
-                  >
-                    mdi-pencil
-                  </v-icon>
-                  <v-icon
-                    medium
-                    class="ma-3"
-                    color="secondary darken-3"
-                    @click="konfigurasiKeanggotaan(item.id_tim, item.nama_tim,'tim', item.id_organisasi)"
-                  >
-                    mdi-account-cog-outline
-                  </v-icon>
-                  <v-icon
-                    medium
-                    class="ma-3"
-                    color="red"
-                    @click="deleteDataTim(item)"
-                  >
-                    mdi-delete
-                  </v-icon>
+                  <v-btn class="ma-3"
+                      color="primary darken-3"
+                      @click="editDataTim(item)">
+                    <v-icon medium>
+                      mdi-pencil
+                    </v-icon>
+                    Edit Profil Tim
+                  </v-btn>
+
+                  <v-btn class="ma-3"
+                      color="secondary darken-3"
+                       @click="konfigurasiKeanggotaan(item.id_tim, item.nama_tim,'tim', item.id_organisasi)">
+                    <v-icon medium>
+                      mdi-account-cog-outline
+                    </v-icon>
+                    Anggota Tim
+                  </v-btn>
+
+                  <v-btn class="ma-3"
+                      color="error darken-3"
+                       @click="deleteDataTim(item)">
+                    <v-icon medium>
+                      mdi-delete
+                    </v-icon>
+                    Hapus Tim
+                  </v-btn>
                 </div>
               </template>
               <template v-slot:no-data>
@@ -901,30 +1061,32 @@
               </template>
               <template v-slot:item.actions_divisi="{ item }">
                 <div>
-                  <v-icon
-                    medium
-                    class="ma-3"
-                    color="primary darken-3"
-                    @click="editDataDivisi(item)"
-                  >
-                    mdi-pencil
-                  </v-icon>
-                  <v-icon
-                    medium
-                    class="ma-3"
-                    color="secondary darken-3"
-                    @click="konfigurasiKeanggotaan(item.id_divisi, item.nama_divisi,'divisi', item.id_organisasi)"
-                  >
-                    mdi-account-cog-outline
-                  </v-icon>
-                  <v-icon
-                    medium
-                    class="ma-3"
-                    color="red"
-                    @click="deleteDataDivisi(item)"
-                  >
-                    mdi-delete
-                  </v-icon>
+                  <v-btn class="ma-3"
+                      color="primary darken-3"
+                      @click="editDataDivisi(item)">
+                    <v-icon medium>
+                      mdi-pencil
+                    </v-icon>
+                    Edit Profil Divisi
+                  </v-btn>
+
+                  <v-btn class="ma-3"
+                      color="secondary darken-3"
+                      @click="konfigurasiKeanggotaan(item.id_divisi, item.nama_divisi,'divisi', item.id_organisasi)">
+                    <v-icon medium>
+                      mdi-account-cog-outline
+                    </v-icon>
+                    Anggota Divisi
+                  </v-btn>
+
+                  <v-btn class="ma-3"
+                      color="error darken-3"
+                       @click="deleteDataDivisi(item)">
+                    <v-icon medium>
+                      mdi-delete
+                    </v-icon>
+                    Hapus Divisi
+                  </v-btn>
                 </div>
               </template>
               <template v-slot:no-data>
@@ -995,30 +1157,32 @@
               </template>
               <template v-slot:item.actions_organisasi="{ item }">
                 <div>
-                  <v-icon
-                    medium
-                    class="ma-3"
-                    color="primary darken-3"
-                    @click="editDataOrganisasi(item)"
-                  >
-                    mdi-pencil
-                  </v-icon>
-                  <v-icon
-                    medium
-                    class="ma-3"
-                    color="secondary darken-3"
-                    @click="konfigurasiKeanggotaan(item.id_organisasi, item.nama_organisasi,'organisasi', item.id_organisasi)"
-                  >
-                    mdi-account-cog-outline
-                  </v-icon>
-                  <v-icon
-                    medium
-                    class="ma-3"
-                    color="red"
-                    @click="deleteDataOrganisasi(item)"
-                  >
-                    mdi-delete
-                  </v-icon>
+                  <v-btn class="ma-3"
+                      color="primary darken-3"
+                      @click="editDataOrganisasi(item)">
+                    <v-icon medium>
+                      mdi-pencil
+                    </v-icon>
+                    Edit Profil Organisasi
+                  </v-btn>
+
+                  <v-btn class="ma-3"
+                      color="secondary darken-3"
+                      @click="konfigurasiKeanggotaan(item.id_organisasi, item.nama_organisasi,'organisasi', item.id_organisasi)">
+                    <v-icon medium>
+                      mdi-account-cog-outline
+                    </v-icon>
+                    Anggota Organisasi
+                  </v-btn>
+
+                  <v-btn class="ma-3"
+                      color="error darken-3"
+                       @click="deleteDataOrganisasi(item)">
+                    <v-icon medium>
+                      mdi-delete
+                    </v-icon>
+                    Hapus Organisasi
+                  </v-btn>
                 </div>
               </template>
               <template v-slot:no-data>
@@ -1295,7 +1459,6 @@
           { text: 'Email', value: 'email' },
           { text: 'Terdaftarkan', value: 'created_at' },
           { text: 'Status', value: 'status_account'},
-          { text: 'Keanggotaan', value: 'keanggotaans'},
           { text: 'Actions', value: 'actions', sortable: false, width: '20%' },
         ],
         dialog_role_anggota_keanggotaan: false,
@@ -1333,7 +1496,7 @@
       await axios.get('/api/user-permission').then(response => {
           this.currentUser = response.data.user;
           this.$store.commit('updateRBAC', response.data.permissions)
-          if(!(response.data.permissions).includes('users.create')){
+          if(!(response.data.permissions).includes('users.update')){
             this.$router.push('/')
           }
       }).catch(errors => {
@@ -1354,6 +1517,16 @@
         this.overlay = true;
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
         this.overlay_text = 'Mengambil data organisasi . . .'
+        await axios.get('/api/user-members').then(response => {
+            console.log(response)
+        }).catch(errors => {
+            console.log(errors)
+        });
+        await axios.get('/api/user-memberships/AdminOrganisasi&PenulisOrganisasi/detail').then(response => {
+            console.log(response)
+        }).catch(errors => {
+            console.log(errors)
+        });
         await axios.get('/api/read-organisasi').then(response => {
             if(response.data.status == true){
               // this.items = response.data.data
@@ -1370,6 +1543,7 @@
             if(response.data.status == true){
               // this.items = response.data.data
               this.divisi_items = response.data.data
+              // console.log(response.data.data)
               // this.organisasi_items = response.data.data
             }else{
               console.log(response.data.message)
@@ -1382,6 +1556,7 @@
             if(response.data.status == true){
               // this.items = response.data.data
               this.tim_items = response.data.data
+              // console.log(response.data.data)
             }else{
               console.log(response.data.message)
             }
@@ -1494,7 +1669,7 @@
       },
       async submitDeleteAnggota(user_add){
         this.overlay = true
-        this.overlay_text = 'Memasukkan pengguna kedalam keanggotaan . . .'
+        this.overlay_text = 'Menghilangkan pengguna kedalam keanggotaan . . .'
         const config = {
             headers: {
                 'Content-Type': 'multipart/form-data',
@@ -1585,6 +1760,7 @@
         // console.log(url)
         await axios.get(url).then(response => {
             this.keanggotaan_items = response.data
+            // console.log(response.data)
         }).catch(errors => {
           console.log(errors)
         });
@@ -1921,6 +2097,7 @@
         this.overlay = true
         this.edited_index_tim = this.tim_items.indexOf(item)
         this.tim = Object.assign({}, item)
+        console.log(this.tim)
         if(this.tim.id_organisasi != null){
           axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
           await axios.get('/api/read-divisi/'+this.tim.id_organisasi).then(response => {

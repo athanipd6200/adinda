@@ -58,14 +58,14 @@
           </v-row>
         </v-col>
       </v-row> -->
-      <p style="text-align:center;">
+      <!-- <p style="text-align:center;">
         <v-btn rounded outlined to="/list-inovation" target="_blank" large color="black" class="mt-4">
           <v-icon class="mr-2">
             mdi-lightbulb-on
           </v-icon>
           Yuk Kenali Inovasi Yang Lain
         </v-btn>
-      </p>
+      </p> -->
     </v-container>
   </section>
 </template>

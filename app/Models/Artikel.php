@@ -16,6 +16,7 @@ class Artikel extends Model
 
     protected $fillable = [
     	'id_artikel',
+        'id_keanggotaan',
     	'judul_artikel',
     	'jenis_artikel',
         'teks_pembuka_artikel',
@@ -26,13 +27,14 @@ class Artikel extends Model
         'geolocation_artikel',
         'lampiran_artikel',
         'penulis_artikel',
-        'verification_artikel',
-        'verificator_artikel',
-        'email_creator_artikel',
-        'organization_creator_artikel',
-        'sub_organization_creator_artikel',
-        'tampilan_web',
         'penyunting_artikel',
+        'pengawas_artikel',
+        'status_tampilan_artikel',
+        'status_verifikasi_artikel',
+        'kelompok_artikel',
+        'created_by',
+        'updated_by',
+
     ];
 
     protected $table = 'artikels';

@@ -24,6 +24,7 @@ class CreateUsersTable extends Migration
             // $table->mediumText('id_organisasi')->nullable();
             // $table->mediumText('id_divisi')->nullable();
             // $table->mediumText('id_tim')->nullable();
+            $table->softDeletes();
             $table->rememberToken();
             $table->timestamps();
         });

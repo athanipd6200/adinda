@@ -190,6 +190,9 @@ class KeanggotaanController extends Controller
                 $data_keanggotaan = [];
                 // error_log($role_keanggotaan);
                 $role_keanggotaan = array_filter(explode(',',$role_keanggotaan));
+                if($id_user == $request->user()->id){
+                    $role_keanggotaan[] = 'Admin'.ucfirst($jenis_keanggotaan);
+                }
                 foreach($role_keanggotaan as $value) {
                     # code...
 
@@ -263,7 +266,9 @@ class KeanggotaanController extends Controller
                 // }else{
                 //     return response()->json(['status' => false, 'message' => 'Tidak bisa diakses (Forbidden)']);
                 // }
-                Keanggotaan::where($data)->delete();
+                if($id_user != $request->user()->id){
+                    Keanggotaan::where($data)->delete();
+                }
             }catch (Exception $e) {
                 return response()->json(['status' => false, 'message' => $e->getMessage()]);
             }

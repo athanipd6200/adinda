@@ -25,8 +25,11 @@ class CreateInovationsTable extends Migration
             $table->longText('konten_inovation')->nullable();
             $table->string('tautan_materi_inovation')->nullable();
             $table->string('tautan_kode_inovation')->nullable();
-            $table->string('created_by')->nullable();
-            $table->string('created_by_group')->nullable();
+            $table->string('created_by')->nullable(); //email
+            $table->string('updated_by')->nullable(); //email
+            $table->string('verified_by')->nullable(); //email
+            $table->string('supervised_by')->nullable(); //email
+            $table->string('created_by_group')->nullable(); //id_grup
             $table->softDeletes();
             $table->timestamps();
         });

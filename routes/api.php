@@ -4,10 +4,10 @@ use App\Models\Keanggotaan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
-use Illuminate\Support\Facades\DB;
+// use Illuminate\Support\Facades\Hash;
+// use Spatie\Permission\Models\Role;
+// use Spatie\Permission\Models\Permission;
+// use Illuminate\Support\Facades\DB;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -81,6 +81,17 @@ Route::middleware('auth:sanctum')->get('/user-permission', function (Request $re
         $roles[] = $value;
     };
     return response()->json(['status' => true, 'user' => $user, 'permissions' => $permissions, 'roles' => $roles]);
+});
+
+Route::middleware('auth:sanctum')->get('/user-memberships/{role?}/{detail?}', function (Request $request, String $role = null, bool $detail = null) {
+    if($role == null){
+        $role = 'all';
+    }
+    if($detail == null){
+        $detail = false;
+    }
+    $data = $request->user()->keanggotaan_by_role($role, $detail);
+    return response()->json(['status' => true, 'data' => $data, 'message' => 'Berhasil ambil data keanggotaan']);
 });
 
 // router untuk mengambil gambar infografis
@@ -302,13 +313,14 @@ Route::middleware('auth:sanctum')->get('/users/{search?}', function (Request $re
             error_log('pencarian user untuk tambah anggota di manajemen organisasi');
             $id_keanggotaan = $request->id_keanggotaan;
             $jenis_keanggotaan = $request->jenis_keanggotaan;
-            $keanggotaan = User::with(['keanggotaans'])->where('users.name', 'like', '%'.$search.'%')->get();
+            $keanggotaan = User::with(['keanggotaans'])->where('users.name', 'like', '%'.$search.'%')->orWhere('users.email', 'like', '%'.$search.'%')->get();
             return response($keanggotaan, 200);
         }elseif($request->id_keanggotaan != null && $request->jenis_keanggotaan != null){
             error_log('ambil user dari suatu keanggotaan di manajemen organisasi');
             $id_keanggotaan = $request->id_keanggotaan;
             $jenis_keanggotaan = $request->jenis_keanggotaan;
-            $keanggotaan = Keanggotaan::distinct('id_user')->where('id_keanggotaan', $id_keanggotaan)->where('jenis_keanggotaan', $jenis_keanggotaan)->join('users', 'users.id', '=', 'keanggotaans.id_user');
+            $keanggotaan = Keanggotaan::select(['id_user', 'id_keanggotaan', 'jenis_keanggotaan', 'id', 'name', 'email', 'users.updated_at', 'users.created_at'])->groupBy(['id_user', 'id_keanggotaan', 'jenis_keanggotaan', 'id', 'name', 'email', 'users.updated_at', 'users.created_at'])->where('id_keanggotaan', $id_keanggotaan)->where('jenis_keanggotaan', $jenis_keanggotaan)->join('users', 'users.id', '=', 'keanggotaans.id_user')->get();
+            // $keanggotaan = DB::table('keanggotaans')->where('id_keanggotaan', $id_keanggotaan)->where('jenis_keanggotaan', $jenis_keanggotaan)->select(['id_user', 'id_keanggotaan', 'jenis_keanggotaan', 'id', 'name', 'email', 'users.updated_at', 'users.created_at'])->distinct()->join('users', 'users.id', '=', 'keanggotaans.id_user')->get();
             return response($keanggotaan, 200);
         }elseif($search == null){
             error_log('all user');
@@ -361,7 +373,7 @@ Route::post('/delete-divisi', [App\Http\Controllers\DivisiController::class, 'de
 Route::post('/update-divisi', [App\Http\Controllers\DivisiController::class, 'update'])->middleware('auth:sanctum');
 Route::get('/take-divisi/{id_divisi?}', [App\Http\Controllers\DivisiController::class, 'show'])->middleware('auth:sanctum');
 
-// router untuk organisasi
+// router untuk tim
 Route::post('/create-tim', [App\Http\Controllers\TimController::class, 'store'])->middleware('auth:sanctum');
 Route::get('/read-tim', [App\Http\Controllers\TimController::class, 'index'])->middleware('auth:sanctum');
 Route::post('/delete-tim', [App\Http\Controllers\TimController::class, 'destroy'])->middleware('auth:sanctum');

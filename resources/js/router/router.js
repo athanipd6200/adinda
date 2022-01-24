@@ -3,28 +3,25 @@ import VueRouter from 'vue-router'
 
 Vue.use(VueRouter)
 
-import IndexMain from './../components/main/IndexMain'
 // import Welcome from './../components/main/Welcome'
-import PageNotFound from './../components/main/PageNotFound'
+import Landing from './../components/main/Landing'
 import Login from './../components/auth/Login'
 import Register from './../components/auth/Register'
-import Profile from './../components/main/AccountData'
-import ListNews from './../components/main/ListNews'
-import ListNewsVerifikator from './../components/main/ListNewsVerifikator'
-import ListArtikelPublik from './../components/main/ListArtikelPublik'
-import ArtikelPublik from './../components/main/ArtikelPublik'
+import AuthLayout from './../components/main/AuthLayout'
+import Profile from './../components/main/Profil'
+import ArtikelAdminCRUD from './../components/main/ArtikelAdminCRUD'
+import ArtikelAdminVerifikator from './../components/main/ArtikelAdminVerifikator'
+import ArtikelPublikMajemuk from './../components/main/ArtikelPublikMajemuk'
+import ArtikelPublikTunggal from './../components/main/ArtikelPublikTunggal'
+import InfografisAdminCRUD from './../components/main/InfografisAdminCRUD'
+import InfografisPublikMajemuk from './../components/main/InfografisPublikMajemuk'
+import InovasiAdminCRUD from './../components/main/InovasiAdminCRUD'
+import InovasiAdminVerifikator from './../components/main/InovasiAdminVerifikator'
+import InovasiPublikMajemuk from './../components/main/InovasiPublikMajemuk'
+import InovasiPublikTunggal from './../components/main/InovasiPublikTunggal'
 import ManajemenUser from './../components/main/ManajemenUser'
-import ListInfografis from './../components/main/ListInfografis'
-import ListInfografisPublik from './../components/main/ListInfografisPublik'
-import InfografisPublik from './../components/main/InfografisPublik'
-import ListInovation from './../components/main/ListInovation'
-import ListInovationPublik from './../components/main/ListInovationPublik'
-import ListInovationVerifikator from './../components/main/ListInovationVerifikator'
-import InovationPublik from './../components/main/InovationPublik'
-import InovationDetail from './../components/main/InovationDetail'
-import Landing from './../components/main/Landing'
 import ManajemenOrganisasi from './../components/main/ManajemenOrganisasi'
-
+import PageNotFound from './../components/main/PageNotFound'
 const routes = [
 		{
 			path: "/login",
@@ -51,32 +48,32 @@ const routes = [
 		{
 			path: "/list-artikel/:jenis_artikel?",
 			name: "list-artikel",
-			component: ListArtikelPublik,
+			component: ArtikelPublikMajemuk,
 		},
 		{
 			path: "/list-inovation/:jenis_inovation?",
 			name: "list-inovation",
-			component: ListInovationPublik,
+			component: InovasiPublikMajemuk,
 		},
 		{
 			path: "/list-infografis/:jenis_infografis?",
 			name: "list-infografis",
-			component: ListInfografisPublik,
+			component: InfografisPublikMajemuk,
 		},
 		{
 			path: "/artikel/:id_artikel",
 			name: "artikel",
-			component: ArtikelPublik,
+			component: ArtikelPublikTunggal,
 		},
 		{
 			path: "/inovation/:id_inovation",
 			name: "inovation-publik",
-			component: InovationPublik,
+			component: InovasiPublikTunggal,
 		},
 		{
 			path: "/",
 			name: "Main",
-			component: IndexMain,
+			component: AuthLayout,
 			meta: { auth : true },
 			children: [
 	        {
@@ -84,7 +81,7 @@ const routes = [
 	            name: 'profile',
 	            meta: { auth : true },
 	            components: {
-	            	default: IndexMain,
+	            	default: AuthLayout,
 	            	MainView: Profile
 	            } 
 	        },
@@ -93,8 +90,8 @@ const routes = [
 	            name: 'list-news',
 	            meta: { auth : true },
 	            components: {
-	            	default: IndexMain,
-	            	MainView: ListNews
+	            	default: AuthLayout,
+	            	MainView: ArtikelAdminCRUD
 	            } 
 	        },
 			{
@@ -102,8 +99,8 @@ const routes = [
 	            name: 'list-news-verifikator',
 	            meta: { auth : true },
 	            components: {
-	            	default: IndexMain,
-	            	MainView: ListNewsVerifikator
+	            	default: AuthLayout,
+	            	MainView: ArtikelAdminVerifikator
 	            } 
 	        },
 	        {
@@ -111,7 +108,7 @@ const routes = [
 	            name: 'manajemen-user',
 	            meta: { auth : true },
 	            components: {
-	            	default: IndexMain,
+	            	default: AuthLayout,
 	            	MainView: ManajemenUser
 	            } 
 	        },
@@ -120,7 +117,7 @@ const routes = [
 	            name: 'manajemen-organisasi',
 	            meta: { auth : true },
 	            components: {
-	            	default: IndexMain,
+	            	default: AuthLayout,
 	            	MainView: ManajemenOrganisasi
 	            } 
 	        },
@@ -129,8 +126,8 @@ const routes = [
 	            name: 'list-infografis-crud',
 	            meta: { auth : true },
 	            components: {
-	            	default: IndexMain,
-	            	MainView: ListInfografis
+	            	default: AuthLayout,
+	            	MainView: InfografisAdminCRUD
 	            } 
 	        },
 	        {
@@ -138,8 +135,8 @@ const routes = [
 	            name: 'list-inovation-crud',
 	            meta: { auth : true },
 	            components: {
-	            	default: IndexMain,
-	            	MainView: ListInovation
+	            	default: AuthLayout,
+	            	MainView: InovasiAdminCRUD
 	            } 
 	        },
 			{
@@ -147,17 +144,8 @@ const routes = [
 	            name: 'list-inovation-verifikator',
 	            meta: { auth : true },
 	            components: {
-	            	default: IndexMain,
-	            	MainView: ListInovationVerifikator
-	            } 
-	        },
-			{
-	            path: '/inovation-detail/:id_inovation',
-	            name: 'inovation-detail',
-	            meta: { auth : true },
-	            components: {
-	            	default: IndexMain,
-	            	MainView: InovationDetail
+	            	default: AuthLayout,
+	            	MainView: InovasiAdminVerifikator
 	            } 
 	        },
 			]

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Divisi;
+use App\Models\Keanggotaan;
 use App\Models\Tim;
 use Illuminate\Http\Request;
 use Ramsey\Uuid\Uuid;
@@ -20,17 +21,17 @@ class DivisiController extends Controller
         //
         try{
             if(($request->user()->hasRole('SuperAdmin')) && ($request->id_organisasi == null)){
-                // error_log('Masuk sebagai super admin');
+                // Masuk sebagai super admin
                 $divisis = Divisi::with(['organisasi'])->get();
                 return response()->json(['status' => true, 'message' => "Berhasil ambil data divisi", 'data' => $divisis]);
             }elseif($request->id_organisasi != null){
-                // error_log('Masuk sebagai API ngambil divisi');
-                $id_organisasi = $request->id_organisasi;
-                $divisis = Divisi::with(['organisasi'])->where('id_organisasi', $id_organisasi)->get();
+                // ambil data untuk dropdown divisi dari organisasi
+                $divisis = Divisi::with(['organisasi'])->where('id_organisasi', $request->id_organisasi)->get();
                 return response()->json(['status' => true, 'message' => "Berhasil ambil data divisi", 'data' => $divisis]);
             }else{
-                // error_log('Masuk sebagai user');
-                $divisis = Divisi::with(['organisasi'])->where('id_organisasi', $request->user()->id_organisasi)->get();
+                // Masuk sebagai API ngambil divisi
+                $divisis_ids = $request->user()->divisis();
+                $divisis = Divisi::with(['organisasi'])->whereIn('id_divisi', $divisis_ids)->leftJoin('keanggotaans', 'keanggotaans.id_keanggotaan', '=', 'divisis.id_divisi')->get();
                 return response()->json(['status' => true, 'message' => "Berhasil ambil data divisi", 'data' => $divisis]);
             }
         }catch (Exception $e) {
@@ -118,7 +119,7 @@ class DivisiController extends Controller
      * @param  \App\Models\Divisi  $divisi
      * @return \Illuminate\Http\Response
      */
-    public function edit(Divisi $divisi)
+    public function edit(Request $request, String $id_divisi = null)
     {
         //
     }

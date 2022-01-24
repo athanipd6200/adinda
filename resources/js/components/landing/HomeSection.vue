@@ -79,13 +79,8 @@
     <v-container fluid id="features" class="mt-2">
       <v-row align="center" justify="center">
         <v-col cols="10">
-          <v-row align="center" justify="space-around">
-            <!-- <v-col cols="12" class="text-center">
-              <h1 class="font-weight-light display-2">Title</h1>
-              <h1 class="font-weight-light">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit.
-              </h1>
-            </v-col> -->
+          <div v-if="features.length > 0">
+          <v-row  align="center" justify="space-around">
             <v-col
               cols="12"
               sm="4"
@@ -122,10 +117,37 @@
               </v-hover>
             </v-col>
           </v-row>
+          <p style="text-align:center;">
+            <v-btn rounded outlined to="/list-inovation" target="_blank" large color="black" class="mt-4">
+              <v-icon class="mr-2">
+                mdi-lightbulb-on
+              </v-icon>
+              Yuk Kenali Inovasi Yang Lain
+            </v-btn>
+          </p>
+          </div>
+          <v-row v-else align="center" justify="space-around">
+            <v-col
+              cols="12"
+              class="text-center">
+              <v-img src="/assets/img/inovasi_error.png" contain width="80vw" max-height="80vh">
+              </v-img>
+              <p style="text-align:center;">
+                <v-btn text large color="black" class="mt-4">
+                  <v-icon class="mr-2">
+                    mdi-alert-circle-outline
+                  </v-icon>
+                  INOVASI BELUM ADA
+                  <v-icon class="mr-2">
+                    mdi-alert-circle-outline
+                  </v-icon>
+                </v-btn>
+              </p>
+            </v-col>
+          </v-row>
         </v-col>
       </v-row>
     </v-container>
-
     <v-dialog v-model="dialog" max-width="640px">
       <v-card>
         <youtube
@@ -147,32 +169,13 @@ export default {
   data() {
     return {
       dialog: false,
-      videoId: "i8IvvHJssWE",
+      videoId: "F50ScF6Savg",
       overlay: false,
       loading_text: '',
       isLoggedIn: this.$store.getters.isLogged,
       token: this.$store.getters.token,
       url_base: this.$store.getters.url_base,
-      features: [
-        {
-          ikon_inovation: "/assets/img/icon2.png",
-          nama_inovation: "INOVASI",
-          deskripsi_inovation: "Yuk mengenal inovasi - inovasi di sekitar kita",
-          id_inovation: '',
-        },
-        {
-          ikon_inovation: "/assets/img/icon1.png",
-          nama_inovation: "ARTIKEL",
-          deskripsi_inovation: "Mari mengenal konten - konten keren yang dibuat oleh teman - teman",
-          id_inovation: '',
-        },
-        {
-          ikon_inovation: "/assets/img/icon3.png",
-          nama_inovation: "INFOGRAFIS",
-          deskripsi_inovation: "Butuh info cepat yang epik, ada kok!",
-          id_inovation: '',
-        },
-      ],
+      features: [],
     };
   },
   watch: {

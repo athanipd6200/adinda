@@ -3,7 +3,7 @@
     <navigation :color="color" :flat="flat" />
     <v-main class="pt-0">
       <home />
-      <about />
+      <!-- <about /> -->
       <download />
       <pricing />
       <!-- <contact /> -->
