@@ -159,22 +159,23 @@
               Tanggal : {{ artikel.tanggal_artikel }} 
             </p>
             <ckeditor :editor="editor_read" v-model="artikel.teks_isi_artikel" :disabled="editorDisabled" :config="editorConfig_read"></ckeditor>
-            <h5 style="text-align:left;margin-top:10px;">
-              Lampiran :
-            </h5>
+            
             <div v-if="filenames.length > 0">
-            <v-chip
-                v-for="(filename, index) in filenames_computed"
-                :key='"filenames_"+index'
-                color="primary darken--2"
-                @click="getPreviewFile(filename, 'lampiran_artikel')"
-                medium
-                style="margin:5px;"
-              >
-              <span class="pr-2">
-                {{ filename }}
-              </span>
-            </v-chip>
+              <h5 style="text-align:left;margin-top:10px;">
+                Lampiran :
+              </h5>
+              <v-chip
+                  v-for="(filename, index) in filenames_computed"
+                  :key='"filenames_"+index'
+                  color="primary darken--2"
+                  @click="getPreviewFile(filename, 'lampiran_artikel')"
+                  medium
+                  style="margin:5px;"
+                >
+                <span class="pr-2">
+                  {{ filename }}
+                </span>
+              </v-chip>
             </div>
             <h5 style="text-align:left;margin-top:10px;">
               Tag :
@@ -198,12 +199,12 @@
             <h5 style="text-align:left;margin-top:10px;">
               Penyunting : {{ artikel.penyunting_artikel }}
             </h5>
-            <div>
+            <div v-if="lokasi_tersedia">
               <h5 style="text-align:left;margin-top:10px;">
                 Lokasi : 
               </h5>
               <div id="cover_map">
-                <div v-if="lokasi_tersedia" id="map" ref="map" style="width: auto; height: 40vh"></div>
+                <div id="map" ref="map" style="width: auto; height: 40vh"></div>
               </div>
             </div>
 
@@ -515,7 +516,7 @@
               }
             }
           }).catch(errors => {
-              console.log('Error')
+              console.log(errors)
           }).finally(() => {
           });
           // this.overlay_artikel = false;

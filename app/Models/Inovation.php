@@ -12,6 +12,7 @@ class Inovation extends Model
 
     protected $fillable = [
         'id_inovation',
+        'id_keanggotaan',
         'nama_inovation',
         'ikon_inovation',
         'gambar_inovation',
@@ -21,8 +22,12 @@ class Inovation extends Model
         'konten_inovation',
         'tautan_materi_inovation',
         'tautan_kode_inovation',
+        'status_tampilan_inovation',
+        'status_verifikasi_inovation',
         'created_by',
-        'created_by_group'
+        'updated_by',
+        'verified_by',
+        'supervised_by',
     ];
 
     protected $table = 'inovations';

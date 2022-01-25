@@ -866,7 +866,7 @@
         <v-spacer></v-spacer>
         <v-btn
           class="mr-4"
-          color="primary"
+          color="primary darken-3"
           @click="submitEditRoleAnggota"
         >
           submit role

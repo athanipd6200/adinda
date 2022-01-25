@@ -137,4 +137,30 @@ class User extends Authenticatable
         }
         return $list_keanggotaan;
     }
+
+    public function keanggotaan_by_roles(Array $roles, $detail = false){
+        $id = $this->attributes['id'];
+        $list_keanggotaan = [];
+        $data = [];
+        if(count($roles) == 0){
+            return $list_keanggotaan;
+        }
+        if($detail == false){
+            foreach($roles as $key1 => $role){
+                $id_kegiatans = $this->keanggotaan_by_role($role);
+                foreach($id_kegiatans as $key2 => $id_kegiatan_value){
+                    array_push($list_keanggotaan, $id_kegiatan_value);
+                }
+            }
+            $list_keanggotaan = array_unique($list_keanggotaan);
+        }else{
+            foreach($roles as $key1 => $role){
+                $id_kegiatans = $this->keanggotaan_by_role($role, true);
+                foreach($id_kegiatans as $key2 => $value){
+                    array_push($list_keanggotaan, $value);
+                }
+            }
+        }
+        return $list_keanggotaan;
+    }
 }

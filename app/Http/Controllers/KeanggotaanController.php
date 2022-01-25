@@ -156,20 +156,24 @@ class KeanggotaanController extends Controller
         //
         $jenis_keanggotaan = $request->jenis_keanggotaan;
         $status_keanggotaan = false;
-        switch ($jenis_keanggotaan) {
-            case "organisasi":
-                $status_keanggotaan = in_array($request->id_keanggotaan, $request->user()->keanggotaan_by_role('AdminOrganisasi'));
-                break;
-            case "divisi":
-                $status_keanggotaan = in_array($request->id_keanggotaan, $request->user()->keanggotaan_by_role('AdminDivisi'));
-                break;
-            case "tim":
-                $status_keanggotaan = in_array($request->id_keanggotaan, $request->user()->keanggotaan_by_role('AdminTim'));
-                break;
-            default:
-                $status_keanggotaan = false;
+        if($request->user()->hasRole(['SuperAdmin'])){
+            $status_keanggotaan = true;
+        }else{
+            switch ($jenis_keanggotaan) {
+                case "organisasi":
+                    $status_keanggotaan = in_array($request->id_keanggotaan, $request->user()->keanggotaan_by_role('AdminOrganisasi'));
+                    break;
+                case "divisi":
+                    $status_keanggotaan = in_array($request->id_keanggotaan, $request->user()->keanggotaan_by_role('AdminDivisi'));
+                    break;
+                case "tim":
+                    $status_keanggotaan = in_array($request->id_keanggotaan, $request->user()->keanggotaan_by_role('AdminTim'));
+                    break;
+                default:
+                    $status_keanggotaan = false;
+            }
         }
-        if(($request->user() != null && $status_keanggotaan) || ($request->user()->hasRole(['SuperAdmin']))){
+        if(($request->user() != null && $status_keanggotaan)){
             $request->validate([
                 'id_user' => ['required', 'integer'],
                 'id_keanggotaan' => ['required', 'string'],

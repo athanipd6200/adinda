@@ -43,16 +43,16 @@ L<template>
           >
             <form @submit.prevent="submit">
               <!-- Keanggotaan -->
-              <h3><b>Keanggotaan Artikel/Berita/Konten</b></h3>
+              <h3 v-if="memberships_items_length" ><b>Keanggotaan Artikel/Berita/Konten</b></h3>
               <v-select
                 v-model="news_edit.id_keanggotaan"
+                v-if="memberships_items_length"
                 :items="user_memberships"
                 item-value="value"
                 :item-text="item =>`[${item.type.toUpperCase()}] ${item.text}`"
                 :error-messages="errors"
                 label="Keanggotaan Artikel"
                 prepend-icon="mdi-format-list-bulleted-square"
-                required
               ></v-select>
 
               <!-- judul berita -->
@@ -254,8 +254,8 @@ L<template>
 
               <h3><b>Tampilkan Artikel/Berita ke Halaman Publik?</b></h3>
               <v-select
-              v-model="news_edit.tampilan_web"
-                :items="tampilan_web_items"
+              v-model="news_edit.status_tampilan_artikel"
+                :items="status_tampilan_artikel_items"
                 item-text="teks"
                 item-value="value"
                 label="Tampilankan di Web"
@@ -326,6 +326,8 @@ L<template>
             <p><b>Teks Pengantar</b> : {{ news.teks_pembuka_artikel }}</p>
             <p><b>Penulis Artikel</b> : {{ news.penulis_artikel }}</p>
             <p><b>Penyunting Artikel</b> : {{ news.penyunting_artikel }}</p>
+            <p><b>Email Verifikator</b> : {{ news.verificated_by }}</p>
+            <p><b>Update Terakhir</b> : {{ new Date(news.updated_at).toUTCString() }}</p>
             <p><b>Tags Artikel</b> :</p>
             <v-chip
                 v-for="(filename, index) in tagnames_computed"
@@ -527,8 +529,8 @@ L<template>
 
               <h3><b>Tampikan Artikel/Berita ke Halaman Publik?</b></h3>
               <v-select
-              v-model="news.tampilan_web"
-                :items="tampilan_web_items"
+              v-model="news.status_tampilan_artikel"
+                :items="status_tampilan_artikel_items"
                 item-text="teks"
                 item-value="value"
                 label="Tampilankan di Web"
@@ -616,8 +618,8 @@ L<template>
       class="elevation-1"
     >
       <template v-slot:top>
-        <h2 class="mx-4">DAFTAR BERITA 
-          <v-btn
+        <h2 class="mx-4">DAFTAR VERIFIKASI ARTIKEL
+          <!-- <v-btn
             class="mx-2 my-2"
             fab
             dark
@@ -628,7 +630,7 @@ L<template>
             <v-icon dark>
               mdi-plus
             </v-icon>
-          </v-btn>
+          </v-btn> -->
         </h2>
         <v-toolbar
           flat
@@ -636,7 +638,7 @@ L<template>
         <v-text-field
           v-model="search_artikel"
           append-icon="mdi-magnify"
-          label="Cari Berita"
+          label="Cari artikel"
           class="mx-4 my-2"
           single-line
           hide-details
@@ -645,6 +647,9 @@ L<template>
         </v-toolbar>
         <v-divider class="mx-4"></v-divider>
       </template>
+      <template v-slot:item.keanggotaan="{ item }">
+        {{ item.nama_organisasi != null ? "(Organisasi) "+item.nama_organisasi : (item.nama_divisi != null ? "(Divisi) "+item.nama_divisi : "(Tim) "+item.nama_tim) }}
+      </template>
       <template v-slot:item.penulis_artikel="{ item }">
         {{ item.penulis_artikel }} ({{ item.created_by }})
       </template>
@@ -652,7 +657,8 @@ L<template>
         {{ item.penyunting_artikel == null ? '-' : item.penyunting_artikel.toString()+' ('+item.updated_by.toString()+')' }}
       </template>
       <template v-slot:item.status_verifikasi_artikel="{ item }">
-        {{ item.status_verifikasi_artikel === 1 ? 'Terverifikasi' : 'Belum Terverifikasi'}}
+        <v-chip v-if="item.status_verifikasi_artikel === 1" color="blue" small dark>Terverifikasi</v-chip>
+        <v-chip v-else color="orange darken-2" small dark>Belum Terverifikasi</v-chip>
       </template>
       <template v-slot:item.actions="{ item }">
         <v-btn text
@@ -836,6 +842,7 @@ L<template>
           gambar_pembuka_artikel:null,
           lampiran_artikel:null,
           tags_artikel:null,
+          status_tampilan_artikel:true,
         },
         news_edit:{
           id_entri:'',
@@ -850,6 +857,7 @@ L<template>
           lampiran_artikel:null,
           lampiran_artikel_new: null,
           tags_artikel:null,
+          status_tampilan_artikel:true,
         },
         gambar_pembuka_artikel:'',
         jenis_artikel_items:[
@@ -857,9 +865,9 @@ L<template>
           {teks: 'Indikator Statistik', value: 'indikator-statistik'},
           {teks: 'Materi Umum', value: 'materi-umum'},
         ],
-        tampilan_web_items:[
-          {teks: 'Ya', value: 'true'},
-          {teks: 'Tidak', value: 'false'},
+        status_tampilan_artikel_items:[
+          {teks: 'Ya', value: true},
+          {teks: 'Tidak', value: false},
         ],
         dialog: false,
         dialogNewsEdit: false,
@@ -896,10 +904,15 @@ L<template>
         desserts:[],
         dessertHeaders: [
           {
-            text: 'Daftar Artikel',
+            text: 'Judul Artikel',
             align: 'start',
             sortable: true,
             value: 'judul_artikel',
+          },
+          {
+            text: 'Keanggotaan Artikel/Konten',
+            sortable: true,
+            value: 'keanggotaan',
           },
           { text: 'Jenis Artikel', value: 'jenis_artikel' },
           { text: 'Penulis Artikel', value: 'penulis_artikel' },
@@ -930,8 +943,9 @@ L<template>
         tags_items_edit: [],
         tags_search_edit: "",
         errors:'',
-        currentUser:{},
         permissions:[],
+        user_memberships: [],
+        user: null,
       }
     },
     watch: {
@@ -983,12 +997,15 @@ L<template>
         if (!this.news.gambar_pembuka_artikel) return null;
           return URL.createObjectURL(this.news.gambar_pembuka_artikel);
       },
+      memberships_items_length(){
+        return this.news_edit.created_by == this.user.email
+      },
     },
     methods: {
       //Reading data from API method. 
       async readDataFromAPI() {
         this.loading = true;
-        await axios.get('/api/get-artikels')
+        await axios.get('/api/get-artikels/supervisor')
           .then((response) => {
             //Then injecting the result to datatable parameters.
             this.loading = false;
@@ -1057,7 +1074,7 @@ L<template>
         return [ cxTimes6SignedArea / sixSignedArea, cyTimes6SignedArea / sixSignedArea];        
       },
       getPreviewFile(file_name, jenis_file){
-        var link = this.url_base + /api/ + jenis_file +'/'+ file_name
+        var link = this.url_base + '/api/' + jenis_file +'/'+ file_name
         var tipe_file = file_name.split('.').slice(-1)[0]
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
         axios(link, {
@@ -1080,6 +1097,25 @@ L<template>
         .catch(error => {
             console.log(error);
         });
+      },
+      async userMemberships(){
+        await axios.get('/api/user-memberships/PenulisArtikelOrganisasi&PenulisArtikelDivisi&PenulisArtikelTim/true').then(response => {
+            let data = response.data.data
+            // console.log(response.data.data)
+            let memberships = []
+            data.forEach(datum => {
+              if(datum.jenis_keanggotaan == 'organisasi'){
+                memberships.push({text : datum.nama_organisasi, value: datum.id_keanggotaan, type: 'organisasi'})
+              }else if(datum.jenis_keanggotaan == 'divisi'){
+                memberships.push({text : datum.nama_divisi, value: datum.id_keanggotaan, type : 'divisi'})
+              }else if(datum.jenis_keanggotaan == 'tim'){
+                memberships.push({text : datum.nama_tim, value: datum.id_keanggotaan, type: 'tim'})
+              }
+            });
+            this.user_memberships = memberships
+        }).catch(errors => {
+            console.log(errors)
+        })
       },
       async download_rekap_aset(){
         this.overlay = true
@@ -1121,6 +1157,7 @@ L<template>
         var $teks = "";
         formData.append('id_artikel', this.news.id_artikel);
         formData.append('id_entri', this.news.id_entri);
+        formData.append('id_keanggotaan', this.news.id_keanggotaan);
         console.log(formData);
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
         await axios.post("/api/hapus-artikel", formData, config).then(response => {
@@ -1154,7 +1191,7 @@ L<template>
         // this.edit_crud_dialog = false
         this.dialogNewsView = true
         this.news = item
-        // this.news.tampilan_web = (this.news.tampilan_web === 'true')
+        // this.news.status_tampilan_artikel = (this.news.status_tampilan_artikel === 'true')
         this.gambar_pembuka_artikel = this.url_base+"/api/gambar_pembuka_artikel/"+this.news.gambar_pembuka_artikel
         this.filenames = item.lampiran_artikel == null ? [] : (item.lampiran_artikel).split(',')
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
@@ -1169,8 +1206,8 @@ L<template>
         this.tags_select_edit = item.tags_artikel != null ? (item.tags_artikel).split(',') : [] 
         this.news_edit.lampiran_artikel_new = null
         this.news_edit.gambar_pembuka_artikel_new = null
-        // this.news.tampilan_web = (this.news.tampilan_web === 'true')
-        // this.news.tampilan_web = (this.news.tampilan_web === 'true')
+        // this.news.status_tampilan_artikel = (this.news.status_tampilan_artikel === 'true')
+        // this.news.status_tampilan_artikel = (this.news.status_tampilan_artikel === 'true')
         this.judul_crud_dialog = 'Edit Data : ' + item.judul_artikel
         this.warna_crud_dialog = 'primary darken--3'
 
@@ -1196,9 +1233,21 @@ L<template>
           console.log("Kosong")
           this.dialogNewsEdit = true
           axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
-          await axios.get('/api/user').then(response => {
-            // console.log(response.data)
-            
+          await axios.get('/api/user-memberships/PenulisArtikelOrganisasi&PenulisArtikelDivisi&PenulisArtikelTim/true').then(response => {
+            let data = response.data.data
+            // console.log(response.data.data)
+            let memberships = []
+            data.forEach(datum => {
+              if(datum.jenis_keanggotaan == 'organisasi'){
+                memberships.push({text : datum.nama_organisasi, value: datum.id_keanggotaan, type: 'organisasi'})
+              }else if(datum.jenis_keanggotaan == 'divisi'){
+                memberships.push({text : datum.nama_divisi, value: datum.id_keanggotaan, type : 'divisi'})
+              }else if(datum.jenis_keanggotaan == 'tim'){
+                memberships.push({text : datum.nama_tim, value: datum.id_keanggotaan, type: 'tim'})
+              }
+            });
+            this.user_memberships = memberships
+
             var osmUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                   osmAttrib = '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors',
                   osm = L.tileLayer(osmUrl, { maxZoom: 19, attribution: osmAttrib }),
@@ -1274,8 +1323,20 @@ L<template>
           // console.log("ada isi "+item.geolocation_artikel)
           this.dialogNewsEdit = true
           axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
-          await axios.get('/api/user').then(response => {
-            // console.log(response.data)
+          await axios.get('/api/user-memberships/PenulisArtikelOrganisasi&PenulisArtikelDivisi&PenulisArtikelTim/true').then(response => {
+            let data = response.data.data
+            // console.log(response.data.data)
+            let memberships = []
+            data.forEach(datum => {
+              if(datum.jenis_keanggotaan == 'organisasi'){
+                memberships.push({text : datum.nama_organisasi, value: datum.id_keanggotaan, type: 'organisasi'})
+              }else if(datum.jenis_keanggotaan == 'divisi'){
+                memberships.push({text : datum.nama_divisi, value: datum.id_keanggotaan, type : 'divisi'})
+              }else if(datum.jenis_keanggotaan == 'tim'){
+                memberships.push({text : datum.nama_tim, value: datum.id_keanggotaan, type: 'tim'})
+              }
+            });
+            this.user_memberships = memberships
             
             var lokasi_temp = JSON.parse(item.geolocation_artikel);
             // console.log(lokasi_temp["geometry"]["coordinates"])
@@ -1520,14 +1581,16 @@ L<template>
         formData.append('lampiran_artikel_deleted', JSON.stringify(lampiran_artikel_deleted_arr));
         formData.append('judul_artikel', this.news_edit.judul_artikel);
         formData.append('id_artikel', this.news_edit.id_artikel);
+        formData.append('id_keanggotaan', this.news_edit.id_keanggotaan);
         formData.append('gambar_pembuka_artikel', this.news_edit.gambar_pembuka_artikel);
         formData.append('penulis_artikel', this.news_edit.penulis_artikel);
+        formData.append('created_by', this.news_edit.created_by);
         formData.append('jenis_artikel', this.news_edit.jenis_artikel);
         formData.append('teks_pembuka_artikel', this.news_edit.teks_pembuka_artikel);
         formData.append('teks_isi_artikel', this.news_edit.teks_isi_artikel);
         formData.append('tags_artikel', JSON.stringify(this.tags_select_edit));
         formData.append('tanggal_artikel', this.news_edit.tanggal_artikel);
-        formData.append('tampilan_web', this.news_edit.tampilan_web);
+        formData.append('status_tampilan_artikel', this.news_edit.status_tampilan_artikel);
         formData.append('lampiran_artikel_filename', JSON.stringify(lampiran_artikel_new_names));
         formData.append('geolocation_artikel', this.news_edit.geolocation_artikel);
 
@@ -1626,7 +1689,7 @@ L<template>
         formData.append('teks_isi_artikel', this.news.teks_isi_artikel);
         formData.append('tags_artikel', JSON.stringify(this.tags_select));
         formData.append('tanggal_artikel', this.news.tanggal_artikel);
-        formData.append('tampilan_web', this.news.tampilan_web);
+        formData.append('status_tampilan_artikel', this.news.status_tampilan_artikel);
         formData.append('lampiran_artikel_filename', JSON.stringify(lampiran_artikel_filename));
         formData.append('geolocation_artikel', this.news.geolocation_artikel);
         console.log(JSON.stringify(this.tags_select));
@@ -1667,6 +1730,7 @@ L<template>
         }
         var formData = new FormData();
         formData.append('id_artikel', item.id_artikel);
+        formData.append('id_keanggotaan', item.id_keanggotaan);
         formData.append('status_verifikasi_artikel', true);
 
         await axios.post("/api/verification-artikel", formData, config).then(response => {
@@ -1706,6 +1770,7 @@ L<template>
         }
         var formData = new FormData();
         formData.append('id_artikel', item.id_artikel);
+        formData.append('id_keanggotaan', item.id_keanggotaan);
         formData.append('status_verifikasi_artikel', false);
 
         await axios.post("/api/verification-artikel", formData, config).then(response => {
@@ -1735,7 +1800,8 @@ L<template>
       async initMap(){
         var ref = this;
         var map
-        axios.get('/api/user').then(response => {
+        await axios.get('/api/user').then(response => {
+          this.user = response.data.user
           // console.log(response.data)
           var osmUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                   osmAttrib = '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -1802,7 +1868,7 @@ L<template>
     async created(){
       axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
       await axios.get('/api/user-permission').then(response => {
-          this.currentUser = response.data.user;
+          this.user = response.data.user;
           this.$store.commit('updateRBAC', response.data.permissions)
           if(!(response.data.permissions).includes('articles.create')){
             this.$router.push('/')

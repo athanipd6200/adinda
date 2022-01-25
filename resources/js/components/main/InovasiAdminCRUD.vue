@@ -42,6 +42,24 @@ L<template>
           >
             <form @submit.prevent="submit">
               <h2 class="mt-4 secondary--text"><b>Profil Inovation</b></h2>
+              <h3><b>Keanggotaan</b></h3>
+              <validation-provider
+                v-slot="{ errors }"
+                name="Keanggotaan"
+                rules="required"
+              >
+                <v-select
+                  v-model="inovation_edit.id_keanggotaan"
+                  :items="user_memberships"
+                  item-value="value"
+                  :item-text="item =>`[${item.type.toUpperCase()}] ${item.text}`"
+                  :error-messages="errors"
+                  label="Keanggotaan Inovasi"
+                  prepend-icon="mdi-format-list-bulleted-square"
+                  required
+                ></v-select>
+              </validation-provider>
+
               <!-- Nama inovasi -->
               <h3><b>Nama Inovasi</b></h3>
               <validation-provider
@@ -189,7 +207,7 @@ L<template>
               <!-- image carousel -->
               <validation-provider
                 v-slot="{ errors }"
-                rules="size:20480"
+                rules="size:20480000"
                 style="z-index:2010;">
                   <v-file-input
                     v-model="inovation_edit.gambar_inovation_new"
@@ -214,6 +232,7 @@ L<template>
                     :src="url_base+'/api/gambar_inovation/'+gambar"
                     lazy-src="https://picsum.photos/510/300?random"
                     class="grey lighten-2"
+                    contain
                   >
                     <template v-slot:placeholder>
                       <v-row
@@ -270,6 +289,24 @@ L<template>
           >
             <form @submit.prevent="submit">
               <h2 class="mt-4 secondary--text"><b>Profil Inovation</b></h2>
+              <h3><b>Keanggotaan</b></h3>
+              <validation-provider
+                v-slot="{ errors }"
+                name="Keanggotaan"
+                rules="required"
+              >
+                <v-select
+                  v-model="inovation.id_keanggotaan"
+                  :items="user_memberships"
+                  item-value="value"
+                  :item-text="item =>`[${item.type.toUpperCase()}] ${item.text}`"
+                  :error-messages="errors"
+                  label="Keanggotaan Inovasi"
+                  prepend-icon="mdi-format-list-bulleted-square"
+                  required
+                ></v-select>
+              </validation-provider>
+
               <!-- Nama inovasi -->
               <h3><b>Nama Inovasi</b></h3>
               <validation-provider
@@ -391,11 +428,10 @@ L<template>
               <!-- image carousel -->
               <validation-provider
                 v-slot="{ errors }"
-                rules="size:20480"
+                rules="size:20480000"
                 style="z-index:2010;">
                   <v-file-input
                     v-model="inovation.gambar_inovation"
-                    :rules="image_rules"
                     accept="image/*"
                     show-size
                     chips
@@ -462,7 +498,7 @@ L<template>
       class="elevation-1"
     >
       <template v-slot:top>
-        <h2 class="mx-4">DAFTAR INOVATION 
+        <h2 class="mx-4">DAFTAR INOVASI
           <v-btn
             class="mx-2 my-2"
             fab
@@ -491,6 +527,13 @@ L<template>
         </v-toolbar>
         <v-divider class="mx-4"></v-divider>
       </template>
+      <template v-slot:item.keanggotaan="{ item }">
+        {{ item.nama_organisasi != null ? "(Organisasi) "+item.nama_organisasi : (item.nama_divisi != null ? "(Divisi) "+item.nama_divisi : "(Tim) "+item.nama_tim) }}
+      </template>
+      <template v-slot:item.status_verifikasi_inovation="{ item }">
+        <v-chip v-if="item.status_verifikasi_inovation === 1" color="blue" small dark>Terverifikasi</v-chip>
+        <v-chip v-else color="orange darken-2" small dark>Belum Terverifikasi</v-chip>
+      </template>
       <template v-slot:item.actions="{ item }">
         <v-btn text
           small
@@ -513,12 +556,7 @@ L<template>
         {{ getTanggal(item) }}
       </template>
       <template v-slot:no-data>
-        <v-btn
-          color="primary"
-          @click="readDataFromAPI"
-        >
-          RECALL DATA
-        </v-btn>
+        Belum ada data inovasi
       </template>
     </v-data-table>
   </v-container>
@@ -607,9 +645,6 @@ L<template>
         },
         editor: ClassicEditor,
         overlay: true,
-        image_rules:[
-          value => !value || value.size < 23483023 || 'Ukuran total gambar harus kurang dari 20 MB!',
-        ],
         editorConfig: {
           // plugins: [CKFinder, Link, CKFinderUploadAdapter],
           ckfinder: {
@@ -668,15 +703,18 @@ L<template>
         desserts:[],
         dessertHeaders: [
           {
-            text: 'Daftar Inovation',
+            text: 'Nama Inovasi',
             align: 'start',
             sortable: true,
             value: 'nama_inovation',
+            width: '250px',
           },
+          { text: 'Keanggotaan', value: 'keanggotaan' },
           { text: 'Asal Satuan Kerja', value: 'satker_asal_inovation' },
           { text: 'Kontak Hubung Inovasi', value: 'kontak_hubung_inovation' },
-          { text: 'Post By', value: 'created_by' },
+          // { text: 'Dipublikasikan oleh', value: 'created_by' },
           { text: 'Updated at', value: 'updated_at'},
+          { text: 'Status Verifikasi', value: 'status_verifikasi_inovation'},
           { text: 'Actions', value: 'actions', sortable: false },
         ],
         colors: ['green', 'purple', 'indigo', 'cyan', 'teal', 'primary'],
@@ -684,6 +722,7 @@ L<template>
         currentUser:{},
         permissions:[],
         search_inovasi: '',
+        user_memberships: [],
       }
     },
     watch: {
@@ -724,7 +763,7 @@ L<template>
           .then((response) => {
             //Then injecting the result to datatable parameters.
             // console.log('ambil data dari database')
-            // console.log(response.data)
+            console.log(response.data)
             this.desserts = response.data;
           }).catch(errors => {
             console.log(errors)
@@ -734,6 +773,25 @@ L<template>
             // this.loading = false;
           });
       },
+      async userMemberships(){
+        await axios.get('/api/user-memberships/PenulisInovasiOrganisasi&PenulisInovasiDivisi&PenulisInovasiTim/true').then(response => {
+            let data = response.data.data
+            // console.log(response.data.data)
+            let memberships = []
+            data.forEach(datum => {
+              if(datum.jenis_keanggotaan == 'organisasi'){
+                memberships.push({text : datum.nama_organisasi, value: datum.id_keanggotaan, type: 'organisasi'})
+              }else if(datum.jenis_keanggotaan == 'divisi'){
+                memberships.push({text : datum.nama_divisi, value: datum.id_keanggotaan, type : 'divisi'})
+              }else if(datum.jenis_keanggotaan == 'tim'){
+                memberships.push({text : datum.nama_tim, value: datum.id_keanggotaan, type: 'tim'})
+              }
+            });
+            this.user_memberships = memberships
+        }).catch(errors => {
+            console.log(errors)
+        })
+      },
       json2list(json_data){
         var result = [];
         json_data.forEach((datum) => {
@@ -741,31 +799,6 @@ L<template>
         });
         // console.log(json_data)
         return result;
-      },
-      async download_rekap_aset(){
-        this.overlay_list = true
-        axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
-        await axios.get('/api/rekap-asets/', {
-          responseType: 'blob',
-        }).then((response) => {
-          const nama_zip = "rekap_aset" + ".zip"
-          const url = URL.createObjectURL(new Blob([response.data]))
-          const link = document.createElement('a')
-          link.href = url
-          link.setAttribute(
-            'download',
-            nama_zip
-          )
-          document.body.appendChild(link)
-          link.click()
-        }).catch(errors => {
-          this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(errors.response.data)
-          console.log(errors.response.data)
-          this.warnaSnackbar= "red"
-          this.snackbar = true
-        }).finally(() => {
-          this.overlay_list = false
-        })
       },
       konfirmasiDeleteItem(item){
         this.inovation_delete = item
@@ -781,6 +814,7 @@ L<template>
         var formData = new FormData();
         formData.append('id_inovation', this.inovation_delete.id_inovation);
         formData.append('id_entri', this.inovation_delete.id_entri);
+        formData.append('id_keanggotaan', this.inovation_delete.id_keanggotaan);
         // console.log(formData);
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
         await axios.post("/api/delete-inovation", formData, config).then(response => {
@@ -808,109 +842,19 @@ L<template>
           this.overlay = false
         })
       },
-      editInovation(item){
+      async editInovation(item){
+        this.layout = true
         this.inovation_edit = item
-        // console.log(item)
+        this.inovation_edit.status_verifikasi_inovation = (this.inovation_edit.status_verifikasi_inovation === 1)
+        await this.userMemberships()
         this.dialogInovationEdit = true
-        // this.edit_phase = true
-        // this.inovation = {};
-        // this.edit_phase= true;
-        // this.list_sesi_edit =[];
-        // this.sesi_edit.id_entri = [];
-        // this.sesi_edit.id_sesi = [];
-        // this.sesi_edit.id_inovation = [];
-        // this.sesi_edit.judul_sesi = [];
-        // this.sesi_edit.sambutan_sesi = [];
-        // this.sesi_edit.moderator_sesi = [];
-        // this.sesi_edit.pemateri_sesi = [];
-        // this.sesi_edit.penampil_sesi = [];
-        // this.sesi_edit.tugas_sesi = [];
-        // this.sesi_edit.tautan_sesi = [];
-        // this.sesi_edit.materi_sesi = [];
-        // this.sesi_edit.konten_sesi = [];
-        // this.sesi_edit.tanggal_awal_sesi = [];
-        // this.sesi_edit.tanggal_akhir_sesi = [];
-        // this.sesi_edit.waktu_awal_sesi = [];
-        // this.sesi_edit.waktu_akhir_sesi = [];
-        // this.sesi_edit.able_tautan_sesi = [];
-        // this.sesi_edit.able_tugas_sesi = [];
-        // this.sesi_edit.able_lampiran_sesi = [];
-        // this.sesi_edit.able_materi_publik = [];
-        // var refs = this
-
-        // axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
-        // // this.inovation.tampilan_web = (this.inovation.tampilan_web === 'true')
-        // axios.get("/api/show-inovations/"+item.id_inovation).then(response => {
-        //   // console.log(response.data)
-        //   if(response.data.status == false){
-        //     this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(response.data.message),
-        //     this.warnaSnackbar= "red",
-        //     this.snackbar = true
-        //   }else{
-        //     this.clearCreateItem()
-        //     console.log('data terakses')
-        //     console.log(response.data)
-        //     refs.inovation = response.data.inovation
-        //     refs.inovation.image_preview = response.data.inovation.sampul_inovation
-        //     refs.inovation.sampul_inovation = null
-        //     refs.editors_select = response.data.inovation.editors_inovation != null ? (response.data.inovation.editors_inovation).split(',') : null;
-        //     refs.tags_select = response.data.inovation.tags_inovation != null ? (response.data.inovation.tags_inovation).split(',') : null;
-        //     var list_sesi_temp = response.data.sesis
-        //     var id = 0;
-        //     list_sesi_temp.forEach(element => {
-        //       this.list_sesi_edit.push(
-        //         { name: element.judul_sesi, id: id},
-        //       );
-        //       this.sesi_edit.id_entri[id] = (element.id_entri);
-        //       this.sesi_edit.id_sesi[id] = (element.id_sesi);
-        //       this.sesi_edit.id_inovation[id] = (element.id_inovation);
-        //       this.sesi_edit.judul_sesi[id] = (element.judul_sesi);
-        //       this.sesi_edit.jenis_sesi[id] = (element.jenis_sesi);
-        //       this.sesi_edit.sambutan_sesi[id] = (element.sambutan_sesi);
-        //       this.sesi_edit.moderator_sesi[id] = (element.moderator_sesi);
-        //       this.sesi_edit.pemateri_sesi[id] = (element.pemateri_sesi);
-        //       this.sesi_edit.penampil_sesi[id] = (element.penampil_sesi);
-        //       this.sesi_edit.tugas_sesi[id] = (element.tugas_sesi);
-        //       this.sesi_edit.tautan_sesi[id] = (element.tautan_sesi);
-        //       this.sesi_edit.materi_sesi[id] = (element.materi_sesi);
-        //       this.sesi_edit.konten_sesi[id] = (element.konten_sesi);
-        //       this.sesi_edit.tanggal_awal_sesi[id] = (element.tanggal_awal_sesi);
-        //       this.sesi_edit.tanggal_akhir_sesi[id] = (element.tanggal_akhir_sesi);
-        //       this.sesi_edit.waktu_awal_sesi[id] = (element.waktu_awal_sesi);
-        //       this.sesi_edit.waktu_akhir_sesi[id] = (element.waktu_akhir_sesi);
-        //       this.sesi_edit.able_tautan_sesi[id] = (element.able_tautan_sesi);
-        //       this.sesi_edit.able_tugas_sesi[id] = (element.able_tugas_sesi);
-        //       this.sesi_edit.able_lampiran_sesi[id] = (element.able_lampiran_sesi);
-        //       this.sesi_edit.able_materi_publik[id] = (element.able_materi_publik);
-        //       id++;
-        //     });
-        //   }
-        // }).catch(errors => {
-        //   console.log(errors)
-        //   this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(errors),
-        //   this.warnaSnackbar= "red",
-        //   this.snackbar = true
-        // }).finally(() => {
-        //   this.isLoading = false
-        //   this.overlay_entri = false
-        //   this.overlay_list = false
-        // });
-        // this.dialogInovationEdit = true
-        // this.overlay_list = false
-
+        this.layout = false
       },
-      createInovation(){
-        // this.inovation.id_inovation=''
-        // this.inovation.nama_inovation=''
-        // this.inovation.ikon_inovation=null
-        // this.inovation.deskripsi_inovasi=''
-        // this.inovation.konten_inovation= ''
-        // this.inovation.gambar_inovation=null
-        // this.inovation.tautan_kode_inovation=''
-        // this.inovation.tautan_materi_inovation=''
-        // this.inovation.kontak_hubung_inovation=''
-        // this.inovation.satker_asal_inovation=''
+      async createInovation(){
+        this.layoout = true
+        await this.userMemberships()
         this.dialogInovationCreate = true
+        this.layout = false
       },
       async resetCreateInovation(){
         this.inovation.id_inovation=''
@@ -939,6 +883,7 @@ L<template>
 
           // menambahkan data inovation kedalam form untuk di upload
           formData.append('id_inovation', this.inovation_edit.id_inovation);
+          formData.append('id_keanggotaan', this.inovation_edit.id_keanggotaan);
           formData.append('nama_inovation', this.inovation_edit.nama_inovation);
           formData.append('satker_asal_inovation', this.inovation_edit.satker_asal_inovation);
           formData.append('kontak_hubung_inovation', this.inovation_edit.kontak_hubung_inovation);
@@ -1045,6 +990,7 @@ L<template>
           var formData = new FormData();
           // menambahkan data inovation kedalam form untuk di upload
           formData.append('nama_inovation', this.inovation.nama_inovation);
+          formData.append('id_keanggotaan', this.inovation.id_keanggotaan);
           formData.append('satker_asal_inovation', this.inovation.satker_asal_inovation);
           formData.append('ikon_inovation', this.inovation.ikon_inovation);
           formData.append('kontak_hubung_inovation', this.inovation.kontak_hubung_inovation);
@@ -1154,14 +1100,8 @@ L<template>
     },
     //this will trigger in the onReady State
     async mounted() {
-      // console.log(this.$refs['mapID']);
       axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
       await this.readDataFromAPI();
-      // this.editor_read.isReadOnly = true;
-      // this.initMap();
-      // this.sesi.judul_sesi = Array(100)
-      // this.sesi.waktu_awal_sesi[0] = null
-      // this.sesi.waktu_akhir_sesi[0] = null
       this.overlay = false
     },
     async created(){
@@ -1177,9 +1117,6 @@ L<template>
       }).finally(() => {
           this.permissions = this.$store.getters.rbac
       })
-      // this.editor_read.isReadOnly = true;
-      // console.log(this.$refs['mapID']);
-      // this.initMap();
     },
   }
 </script>

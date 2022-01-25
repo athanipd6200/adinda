@@ -18,16 +18,16 @@ class InovationController extends Controller
     {
         //
         if($id_inovation == null){
-            $inovations = Inovation::select('id_inovation','deskripsi_inovation', 'ikon_inovation', 'kontak_hubung_inovation', 'updated_at', 'satker_asal_inovation', 'tautan_kode_inovation', 'tautan_materi_inovation', 'gambar_inovation')->orderBy('updated_at', 'desc')->limit(6)->get();
+            $inovations = Inovation::select('id_inovation','deskripsi_inovation', 'ikon_inovation', 'kontak_hubung_inovation', 'updated_at', 'satker_asal_inovation', 'tautan_kode_inovation', 'tautan_materi_inovation', 'gambar_inovation')->where('status_verifikasi_inovation', true)->orderBy('updated_at', 'desc')->limit(6)->get();
             return response($inovations, 200);
         }elseif(is_numeric($id_inovation)){
             error_log($id_inovation);
-            $inovations = Inovation::select('id_inovation','deskripsi_inovation', 'ikon_inovation', 'kontak_hubung_inovation', 'updated_at', 'satker_asal_inovation', 'tautan_kode_inovation', 'tautan_materi_inovation', 'gambar_inovation')->orderBy('updated_at', 'desc')->limit($id_inovation)->get();
+            $inovations = Inovation::select('id_inovation','deskripsi_inovation', 'ikon_inovation', 'kontak_hubung_inovation', 'updated_at', 'satker_asal_inovation', 'tautan_kode_inovation', 'tautan_materi_inovation', 'gambar_inovation')->where('status_verifikasi_inovation', true)->orderBy('updated_at', 'desc')->limit($id_inovation)->get();
             return response($inovations, 200);
         }elseif($jumlah_konten_inovation != null && $id_inovation != null){
             error_log($id_inovation);
             $inovation = Inovation::where('id_inovation', $id_inovation)->first();
-            $inovations = Inovation::select('id_inovation','deskripsi_inovation', 'ikon_inovation', 'kontak_hubung_inovation', 'updated_at', 'satker_asal_inovation', 'tautan_kode_inovation', 'tautan_materi_inovation', 'gambar_inovation')->inRandomOrder()->limit($jumlah_konten_inovation)->get();
+            $inovations = Inovation::select('id_inovation','deskripsi_inovation', 'ikon_inovation', 'kontak_hubung_inovation', 'updated_at', 'satker_asal_inovation', 'tautan_kode_inovation', 'tautan_materi_inovation', 'gambar_inovation')->where('status_verifikasi_inovation', true)->inRandomOrder()->limit($jumlah_konten_inovation)->get();
             return response(['inovation' => $inovation, 'inovations' => $inovations], 200);
         }else{
             error_log($id_inovation);
@@ -36,17 +36,6 @@ class InovationController extends Controller
             return response($inovation,  200);
         }
     }
-
-    // public function pagination(Request $request)
-    // {
-    //     //
-    //     if($request->jenis_inovation != null){
-    //         $inovations = Inovation::select('id_inovation','nama_inovation', 'satker_asal_inovation', 'kontak_hubung_inovation', 'updated_at', 'deskripsi_inovation', 'ikon_inovation')->orderBy('updated_at', 'desc')->paginate(10);
-    //     }else{
-    //         $inovations = Inovation::select('id_inovation','nama_inovation', 'satker_asal_inovation', 'kontak_hubung_inovation', 'updated_at', 'deskripsi_inovation', 'ikon_inovation')->orderBy('updated_at', 'desc')->paginate(10);
-    //     }
-    //     return $inovations;
-    // }
 
     public function pagination(Request $request)
     {
@@ -65,22 +54,34 @@ class InovationController extends Controller
     public function verification(Request $request)
     {
         //
-        if(($request->user()->hasPermissionTo('articles.update')) || ($request->user()->hasRole(['SuperAdmin']))){
+        $id_inovation = $request->id_inovation;
+        $id_keanggotaan = $request->id_keanggotaan;
+        $supervisor = in_array($id_keanggotaan, $request->user()->keanggotaan_by_roles(['SupervisorOrganisasi', 'SupervisorDivisi', 'SupervisorTim']));
+        if($request->user()->hasRole('SuperAdmin') || $supervisor){
             try{
-                $status = $request->verification_inovation;
                 $id_inovation = $request->id_inovation;
-
-                $data = [
-                    'verification_inovation' => $status,
-                    'verificator_inovation' => $request->user()->email,
-                ];
+                $status = ($request->status_verifikasi_inovation === 'true');
+                if($status){
+                    $data = [
+                        'status_verifikasi_inovation' => $status,
+                        'verified_by' => $request->user()->email,
+                        'updated_at' => Carbon::now(),
+                    ];
+                }else{
+                    $data = [
+                        'status_verifikasi_inovation' => $status,
+                        'verified_by' => null,
+                        'updated_at' => Carbon::now(),
+                    ];
+                }
                 Inovation::where('id_inovation', $id_inovation)->update($data);
             }catch (Exception $e) {
-                return response()->json(['msg' => $e->getMessage()]);
+                return response()->json(['status' => false, 'message' =>$e->getMessage()]);
             }
         }else{
             return response()->json(['status' => false, 'message' => 'Tidak bisa diakses (Forbidden)']);
         }
+
         return response()->json(['status' => true, 'message' => 'Berhasil mengubah status verifikasi']);
     }
 
@@ -105,7 +106,9 @@ class InovationController extends Controller
         //
         $ikon_inovation = [];
         $gambar_inovation = [];
-        if((($request->user()->hasPermissionTo('inovations.create'))) || ($request->user()->hasRole(['SuperAdmin']))){
+        $id_keanggotaan = $request->id_keanggotaan;
+        $penulis = in_array($id_keanggotaan, $request->user()->keanggotaan_by_roles(['PenulisInovasiOrganisasi', 'PenulisInovasiDivisi', 'PenulisInovasiTim']));
+        if($request->user()->hasRole('SuperAdmin') || $penulis){
             $request->validate([
                 'nama_inovation' => ['required', 'string'],
                 // 'kelurahan_aset' => ['required', 'string'],
@@ -135,6 +138,7 @@ class InovationController extends Controller
                 // $tags = json_decode($request->tags_inovation);
                 Inovation::create([
                     'id_inovation' => $id_inovation,
+                    'id_keanggotaan' => $id_keanggotaan,
                     'nama_inovation' => $nama_inovation ,
                     'satker_asal_inovation' => $request->satker_asal_inovation ,
                     'kontak_hubung_inovation' => $request->kontak_hubung_inovation,
@@ -143,7 +147,7 @@ class InovationController extends Controller
                     'tautan_materi_inovation'=> $request->tautan_materi_inovation,
                     'tautan_kode_inovation' => $request->tautan_kode_inovation ,
                     'created_by' => $request->user()->email ,
-                    'created_by_group' => $request->user()->group == null ? null : $request->user()->group,
+                    // 'created_by_group' => $request->user()->group == null ? null : $request->user()->group,
                     // 'tags_inovation'=> count($tags) > 0 ? implode(",",$tags) : null, 
                     'ikon_inovation'=> count($ikon_inovation) > 0 ? implode(",",$ikon_inovation) : null,
                     'gambar_inovation'=> count($gambar_inovation) > 0 ? implode(",",$gambar_inovation) : null,
@@ -163,16 +167,24 @@ class InovationController extends Controller
      * @param  \App\Models\Inovation  $inovation
      * @return \Illuminate\Http\Response
      */
-    public function show(Request $request)
+    public function show(Request $request, String $jenis = null)
     {
         //
-        if($request->user()->hasRole(['SuperAdmin'])){
-            $inovations = Inovation::orderBy('created_at', 'desc')->get();
+        if($request->user()->hasRole('SuperAdmin')){
+            $inovations = Inovation::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'inovations.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'inovations.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'inovations.id_keanggotaan')->orderBy('inovations.created_at', 'desc')->get();
+            return response($inovations, 200);
+        }elseif($jenis == 'supervisor'){
+            $id_kegiatans = $request->user()->keanggotaan_by_roles(['SupervisorOrganisasi', 'SupervisorDivisi', 'SupervisorTim']);
+            $inovations = Inovation::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'inovations.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'inovations.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'inovations.id_keanggotaan')->whereIn('id_keanggotaan', $id_kegiatans)->orderBy('inovations.created_at', 'desc')->get();
+            return response($inovations, 200);
+        }elseif($jenis == 'penyunting'){
+            $id_kegiatans = $request->user()->keanggotaan_by_roles(['PenyuntingInovasiOrganisasi', 'PenyuntingInovasiDivisi', 'PenyuntingInovasiTim']);
+            $inovations = Inovation::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'inovations.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'inovations.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'inovations.id_keanggotaan')->whereIn('id_keanggotaan', $id_kegiatans)->orderBy('inovations.created_at', 'desc')->get();
+            return response($inovations, 200);
         }else{
-            $email = $request->user()->email;
-            $inovations = Inovation::where('created_by', $email)->orderBy('created_at', 'desc')->get();
+            $inovations = Inovation::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'inovations.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'inovations.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'inovations.id_keanggotaan')->where('inovations.created_by', $request->user()->email)->orderBy('inovations.created_at', 'desc')->get();
+            return response($inovations, 200);
         }
-        return response($inovations, 200);
     }
 
     /**
@@ -196,9 +208,13 @@ class InovationController extends Controller
     public function update(Request $request, Inovation $inovation)
     {
         //
-        if((($request->user()->hasPermissionTo('inovations.update')) && ($request->user()->email == $request->created_by)) || ($request->user()->hasRole(['SuperAdmin']))){
+        $id_inovation = $request->id_inovation;
+        $id_keanggotaan = $request->id_keanggotaan;
+        $supervisor = in_array($id_keanggotaan, $request->user()->keanggotaan_by_roles(['SupervisorOrganisasi', 'SupervisorDivisi', 'SupervisorTim']));
+        if($request->user()->hasRole('SuperAdmin') || $supervisor || ($request->user()->email == $request->created_by)){
             $request->validate([
                 'id_inovation' => ['required', 'string'],
+                'id_keanggotaan' => ['required', 'string'],
                 'nama_inovation' => ['required', 'string'],
                 'satker_asal_inovation' => ['required', 'string'],
                 'kontak_hubung_inovation' => ['required', 'string'],
@@ -208,7 +224,6 @@ class InovationController extends Controller
             ]);
             $ikon_inovation_name = '';
             try{
-                $id_inovation = $request->id_inovation;
                 $nama_inovation = strtoupper($request->nama_inovation);
                 // $gambar_pembuka_inovation = $request->file('ikon_inovation_new');
                 if($request->hasfile('ikon_inovation_new')){
@@ -247,6 +262,7 @@ class InovationController extends Controller
                 $current_date_time = Carbon::now()->toDateTimeString(); 
                 $data_inovation = [
                     'nama_inovation' => $nama_inovation , 
+                    'id_keanggotaan' => $id_keanggotaan , 
                     'satker_asal_inovation' => $request->satker_asal_inovation ,
                     'kontak_hubung_inovation' => $request->kontak_hubung_inovation,
                     'deskripsi_inovation' => $request->deskripsi_inovation,
@@ -254,7 +270,8 @@ class InovationController extends Controller
                     'tautan_materi_inovation' => $request->tautan_materi_inovation,
                     'tautan_kode_inovation'=> $request->tautan_kode_inovation,
                     'created_by' => $request->user()->email ,
-                    'created_by_group' => $request->user()->group == null ? null : $request->user()->group,
+                    'updated_by' => $request->user()->email ,
+                    // 'created_by_group' => $request->user()->group == null ? null : $request->user()->group,
                     // 'tags_inovation'=> count($tags) > 0 ? implode(",",$tags) : null, 
                     'ikon_inovation'=> $ikon_inovation_name,
                     'gambar_inovation'=> count($gambar_inovation_name_new) > 0 ? implode(",",$gambar_inovation_name_new) : null,
@@ -280,11 +297,13 @@ class InovationController extends Controller
     public function destroy(Request $request)
     {
         //
-        if(($request->user()->hasPermissionTo('inovation.delete')) || ($request->user()->hasRole(['SuperAdmin']))){
+        $id_keanggotaan = $request->id_keanggotaan;
+        $supervisor = in_array($id_keanggotaan, $request->user()->keanggotaan_by_roles(['SupervisorOrganisasi', 'SupervisorDivisi', 'SupervisorTim']));
+        if($request->user()->hasRole('SuperAdmin') || $supervisor || ($request->user()->email == $request->created_by)){
             $id_inovation = $request->id_inovation;
             $id_entri = $request->id_entri;
-            error_log($request->id_inovation);
-            error_log($request->id_entri);
+            // error_log($request->id_inovation);
+            // error_log($request->id_entri);
             try{
                 Inovation::where('id_inovation', $id_inovation)->delete();
                 // Inovation::destroy($id_entri);

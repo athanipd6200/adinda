@@ -1,5 +1,14 @@
  <template>
     <v-app id="inspire">
+        <v-overlay :value="overlay_logout" style="z-index:11000;">
+            <v-progress-circular
+                indeterminate
+                size="64"
+            ></v-progress-circular>
+            <p class="text-center">
+                Loading . . .
+            </p>
+        </v-overlay>
         <v-navigation-drawer
             v-model="drawer"
             app
@@ -139,7 +148,7 @@
                 </v-list-group>
 
                 <v-divider></v-divider>
-                <v-list-item link to="/manajemen-user" v-if="permissions.includes('users.read')">
+                <v-list-item link to="/manajemen-user" v-if="permissions.includes('users.create')">
                     <v-list-item-action>
                         <v-icon>mdi-account-group</v-icon>
                     </v-list-item-action>
@@ -252,6 +261,7 @@
                 url_base: this.$store.getters.url_base,
                 permissions: [],
                 roles: [],
+                overlay_logout:false,
             }
         },
         methods: {
@@ -267,20 +277,23 @@
                     this.permissions = this.$store.getters.rbac
                 })
             },
-            logout(){
+            async logout(){
                 // fungsi logout
-                axios.post('/api/logout').then(response => {
+                this.overlay_logout = true
+                await axios.post('/api/logout').then(response => {
                     localStorage.removeItem('token');
                     this.$router.push('/login');
                 }).catch( errors => {
-                    console.log(errors.response.data);
+                    console.log(errors);
                 })
+                this.overlay_logout = false
             },
-            downloadPanduan(){
+            async downloadPanduan(){
+                this.overlay_logout = true
                 var link = '/api/other/panduan.pdf'
                 var file_name = 'panduan.pdf'
                 var tipe_file = file_name.split('.').slice(-1)[0]
-                axios(link, {
+                await axios(link, {
                     method: 'GET',
                     responseType: 'blob' //Force to receive data in a Blob Format
                 })
@@ -300,6 +313,7 @@
                 .catch(error => {
                   console.log(error);
                 });
+                this.overlay_logout = false
             },
         },
         async created () {

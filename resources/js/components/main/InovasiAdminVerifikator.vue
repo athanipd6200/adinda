@@ -1,6 +1,6 @@
 L<template>
   <v-container>
-    <v-overlay :value="overlay_list" style="z-index:2100;">
+    <v-overlay :value="overlay" style="z-index:7000;">
       <v-progress-circular
         indeterminate
         size="64"
@@ -9,12 +9,12 @@ L<template>
         Loading . . .
       </p>
     </v-overlay>
-    <!-- DIALOG UNTUK EDIT -->
-    <v-dialog v-model="dialogPembinaanEdit" fullscreen hide-overlay style="z-index:2050" transition="dialog-bottom-transition">
+    <!-- DIALOG UNTUK EDIT DATA -->
+    <v-dialog v-model="dialogInovationEdit" fullscreen hide-overlay style="z-index:2050" transition="dialog-bottom-transition">
       <v-card>
         <v-toolbar
           dark
-          color="secondary">
+          :color="warna_crud_dialog">
           <v-btn
             icon
             dark
@@ -22,569 +22,242 @@ L<template>
           >
             <v-icon>mdi-close</v-icon>
           </v-btn>
-          <v-toolbar-title>EDIT PEMBINAAN </v-toolbar-title>
+          <v-toolbar-title>{{ judul_crud_dialog }} </v-toolbar-title>
           <v-spacer></v-spacer>
           <v-toolbar-items>
             <v-btn
               dark
               text
+              v-if="edit_crud_dialog"
               @click="submitEditItem()"
             >
-              SUBMIT HASIL EDIT
+              Simpan Data
             </v-btn>
           </v-toolbar-items>
         </v-toolbar>
         <v-divider></v-divider>
         <v-container>
           <validation-observer
-            ref="observer"
+            ref="observer_edit_inovation"
             v-slot="{ invalid }"
           >
             <form @submit.prevent="submit">
-              <h2 class="mt-4 secondary--text"><b>Profil Pembinaan</b></h2>
-              <!-- penanggung jawab pembinaan -->
-              <h3><b>Penanggung Jawab Pembinaan</b></h3>
-              <v-text-field
-                v-model="pembinaan.pembina_pembinaan"
-                :error-messages="errors"
-                label="Penanggung Jawab Pembinaan"
-                prepend-icon="mdi-account"
-              ></v-text-field>
-
-              <!-- judul pembinaan -->
-              <h3><b>Judul Pembinaan</b></h3>
-              <v-text-field
-                v-model="pembinaan.judul_pembinaan"
-                :error-messages="errors"
-                label="Judul Pembinaan"
-                prepend-icon="mdi-alphabetical-variant"
-              ></v-text-field>
-
-              <!-- kategori pembinaan -->
-              <h3 class="mt-2"><b>Kategori/Jenis Pembinaan</b></h3>
-              <v-select
-                v-model="pembinaan.jenis_pembinaan"
-                :items="jenis_pembinaan_items"
-                item-text="teks"
-                item-value="value"
-                :error-messages="errors"
-                label="Kategori/Jenis Pembinaan"
-                prepend-icon="mdi-format-list-bulleted-square"
-                required
-              ></v-select>
-
-              <!-- kalimat pengantar pembinaan -->
-              <h3><b>Kalimat Pengantar Pembinaan</b></h3>
+              <h2 class="mt-4 secondary--text"><b>Profil Inovation</b></h2>
               <validation-provider
                 v-slot="{ errors }"
-                name="Kalimat Pengantar Pembinaan"
+                name="Keanggotaan"
+              >
+                <v-select
+                  v-model="inovation_edit.id_keanggotaan"
+                  :items="user_memberships"
+                  v-if="memberships_items_length"
+                  item-value="value"
+                  :item-text="item =>`[${item.type.toUpperCase()}] ${item.text}`"
+                  :error-messages="errors"
+                  label="Keanggotaan Inovasi"
+                  prepend-icon="mdi-format-list-bulleted-square"
+                ></v-select>
+              </validation-provider>
+
+              <!-- Nama inovasi -->
+              <h3><b>Nama Inovasi</b></h3>
+              <validation-provider
+                v-slot="{ errors }"
+                name="Nama Inovasi"
+                rules="required"
+              >
+                <v-text-field
+                  v-model="inovation_edit.nama_inovation"
+                  :error-messages="errors"
+                  label="Nama Inovasi"
+                  required
+                ></v-text-field>
+              </validation-provider>
+
+              <!-- kalimat pengantar inovation -->
+              <h3><b>Dekripsi Singkat/Abstrak Inovasi</b></h3>
+              <validation-provider
+                v-slot="{ errors }"
+                name="Dekripsi Singkat Inovasi"
                 rules="required"
               >
                 <v-textarea
-                  v-model="pembinaan.teks_pengantar_pembinaan"
+                  v-model="inovation_edit.deskripsi_inovation"
                   :error-messages="errors"
                   filled
                   auto-grow
                   rows="4"
                   row-height="30"
                   shaped
-                  background-color="secondary lighten-3"
-                  class="white--text"
-                  label="Kalimat Pengantar/Pembuka Pembinaan"
+                  label="Deskripsi Singkat/Abstrak Inovasi"
                 ></v-textarea>
               </validation-provider>
 
-              <!-- sampul pembinaan -->
-              <h3><b>Gambar Depan Pembinaan</b></h3>
+              <!-- Satuan Kerja Asal Inovasi -->
+              <h3><b>Satuan Kerja Asal Inovasi</b></h3>
               <validation-provider
                 v-slot="{ errors }"
-                rules="size:20480"
+                name="Satuan Kerja Asal Inovasi"
+                rules="required"
+              >
+                <v-text-field
+                  v-model="inovation_edit.satker_asal_inovation"
+                  :error-messages="errors"
+                  label="Satuan Kerja Asal Inovasi"
+                  required
+                ></v-text-field>
+              </validation-provider>
+
+              <!-- konten inovation -->
+              <h3><b>Isi Konten</b></h3>
+              <ckeditor :editor="editor" v-model="inovation_edit.konten_inovation" :config="editorConfig" class="mb-4"></ckeditor>
+
+              <!-- Narahubung untuk Inovasi -->
+              <h3><b>Narahubung Inovasi</b></h3>
+              <validation-provider
+                v-slot="{ errors }"
+                name="Narahubung Inovasi"
+                rules="required"
+              >
+                <v-text-field
+                  v-model="inovation_edit.kontak_hubung_inovation"
+                  :error-messages="errors"
+                  label="Narahubung Inovasi"
+                  required
+                ></v-text-field>
+              </validation-provider>
+
+              <!-- tautan materi inovation -->
+              <h3><b>Tautan Materi Inovasi</b></h3>
+              <validation-provider
+                v-slot="{ errors }"
+                name="Tautan Materi Inovasi"
+                rules="required"
+              >
+                <v-text-field
+                  v-model="inovation_edit.tautan_materi_inovation"
+                  :error-messages="errors"
+                  label="Tautan Materi Inovasi"
+                  required
+                ></v-text-field>
+              </validation-provider>
+
+              <!-- tautan kode inovation -->
+              <h3><b>Tautan Kode Inovasi</b></h3>
+              <validation-provider
+                v-slot="{ errors }"
+                name="Tautan Kode Inovasi"
+                rules="required"
+              >
+                <v-text-field
+                  v-model="inovation_edit.tautan_kode_inovation"
+                  :error-messages="errors"
+                  label="Tautan Kode Inovasi"
+                  required
+                ></v-text-field>
+              </validation-provider>
+
+              <!-- ikon inovation -->
+              <h3><b>Ikon/Logo Inovation Yang Baru (Jika Ingin Diperbaharui)</b></h3>
+              <validation-provider
+                v-slot="{ errors }"
                 style="z-index:2010;"
+                rules="size:20480"
 
               >
                 <v-file-input
-                  v-model="pembinaan.sampul_pembinaan"
+                  v-model="inovation_edit.ikon_inovation_new"
+                  accept="image/*"
                   chips
                   show-size
                   truncate-length="49"
                   :error-messages="errors"
-                  label="Gambar Cover Depan Pembinaan"
+                  label="Ikon/Logo Inovation"
                   prepend-icon="mdi-image"
                 ></v-file-input>
               </validation-provider>
-              <v-img  style="max-width:80vw;" :src="url_base + '/api/sampul_pembinaan/'+pembinaan.image_preview" alt=""/>
-
-              <v-divider class="my-4"></v-divider>
-
-              <!-- tanggal awal pembinaan -->
-              <h3><b>Tanggal Awal Pembinaan</b></h3>
-              <v-menu
-                ref="menu_tanggal_awal_pembinaan"
-                v-model="menu_tanggal_awal_pembinaan"
-                :close-on-content-click="false"
-                :return-value.sync="pembinaan.tanggal_awal_pembinaan"
-                transition="scale-transition"
-                offset-y
-                min-width="auto"
-              >
-                <template v-slot:activator="{ on, attrs }">
-                  <v-text-field
-                    v-model="pembinaan.tanggal_awal_pembinaan"
-                    label="Tanggal Awal Pembinaan"
-                    prepend-icon="mdi-calendar"
-                    readonly
-                    v-bind="attrs"
-                    v-on="on"
-                  ></v-text-field>
-                </template>
-                <v-date-picker
-                  v-model="pembinaan.tanggal_awal_pembinaan"
-                  no-title
-                  scrollable
-                >
-                  <v-spacer></v-spacer>
-                  <v-btn
-                    text
-                    color="primary"
-                    @click="pembinaan.tanggal_awal_pembinaan = null"
-                  >
-                    Cancel
-                  </v-btn>
-                  <v-btn
-                    text
-                    color="primary"
-                    @click="$refs.menu_tanggal_awal_pembinaan.save(pembinaan.tanggal_awal_pembinaan)"
-                  >
-                    OK
-                  </v-btn>
-                </v-date-picker>
-              </v-menu>
-
-              <!-- tanggal akhir pembinaan -->
-              <h3><b>Tanggal Akhir Pembinaan</b></h3>
-              <v-menu
-                ref="menu_tanggal_akhir_pembinaan"
-                v-model="menu_tanggal_akhir_pembinaan"
-                :close-on-content-click="false"
-                :return-value.sync="pembinaan.tanggal_akhir_pembinaan"
-                transition="scale-transition"
-                offset-y
-                min-width="auto"
-              >
-                <template v-slot:activator="{ on, attrs }">
-                  <v-text-field
-                    v-model="pembinaan.tanggal_akhir_pembinaan"
-                    label="Tanggal Akhir Pembinaan"
-                    prepend-icon="mdi-calendar"
-                    readonly
-                    v-bind="attrs"
-                    v-on="on"
-                  ></v-text-field>
-                </template>
-                <v-date-picker
-                  v-model="pembinaan.tanggal_akhir_pembinaan"
-                  no-title
-                  scrollable
-                >
-                  <v-spacer></v-spacer>
-                  <v-btn
-                    text
-                    color="primary"
-                    @click="pembinaan.tanggal_akhir_pembinaan = null"
-                  >
-                    Cancel
-                  </v-btn>
-                  <v-btn
-                    text
-                    color="primary"
-                    @click="$refs.menu_tanggal_akhir_pembinaan.save(pembinaan.tanggal_akhir_pembinaan)"
-                  >
-                    OK
-                  </v-btn>
-                </v-date-picker>
-              </v-menu>
-
-              <v-divider class="my-4"></v-divider>
-
-              <h2 class="mt-4 secondary--text"><b>Sertifikat, Editor Tambahan, Tags</b></h2>
-
-              <!-- sampul pembinaan -->
-              <h3><b>Tautan Sertifikat Pembinaan</b></h3>
-              <v-text-field
-                v-model="pembinaan.sertifikat_pembinaan"
-                :error-messages="errors"
-                label="Tautan/Link Sertifikat Pembinaan"
-                prepend-icon="mdi-certificate"
-              ></v-text-field>
-
-              <h3 class="mt-2"><b>Editor Tambahan untuk Pembinaan</b></h3>
-              <h5>Pisahkan dengan enter</h5>
-              <v-layout wrap>
-                <v-flex xs12>
-                  <v-combobox multiple
-                    color="primary"
-                    v-model="editors_select" 
-                    label="Email penyunting tambahan pembinaan" 
-                    append-icon
-                    chips
-                    deletable-chips
-                    class="tag-input"
-                    :search-input.sync="editors_search" 
-                    @keyup.tab="updateEditors"
-                    @paste="updateEditors">
-                  </v-combobox>
-                </v-flex>
-              </v-layout>
-
-              <!-- tags pembinaan -->
-              <h3 class="mt-2"><b>Tags/Hashtag Pembinaan </b></h3>
-              <h5>Pisahkan dengan enter tanpa hashtag</h5>
-              <v-layout wrap>
-                <v-flex xs12>
-                  <v-combobox multiple
-                    color="primary"
-                    v-model="tags_select" 
-                    label="Tags Pembinaan" 
-                    append-icon
-                    chips
-                    deletable-chips
-                    class="tag-input"
-                    :search-input.sync="tags_search" 
-                    @keyup.tab="updateTags"
-                    @paste="updateTags">
-                  </v-combobox>
-                </v-flex>
-              </v-layout>
-                <!-- {{ tags_search }} -->
-
-              <v-divider class="my-4"></v-divider>
-
-              <!-- BAGIAN AKSES2 PEMBINAAN -->
-              
-              <h2 class="mt-4 secondary--text"><b>Hak Akses Pembinaan</b></h2>
-              
-              <h3><b>Akses Tampilkan Pembinaan Ke Publik (Untuk Lihat)</b></h3>
-              <v-select
-                v-model="pembinaan.able_akses_halaman_pembinaan"
-                :items="tampilan_web_items"
-                item-text="teks"
-                item-value="value"
-                label="Tampilankan di Halaman Muka/Publik?"
-                prepend-icon="mdi-format-list-bulleted-square"
-              ></v-select>
-
-              <h3><b>Akses Pendaftaran secara mandiri dibuka?</b></h3>
-              <v-select
-                v-model="pembinaan.able_akses_pendaftaran_pembinaan"
-                :items="tampilan_web_items"
-                item-text="teks"
-                item-value="value"
-                label="Buka akses pendaftaran mandiri?"
-                prepend-icon="mdi-format-list-bulleted-square"
-              ></v-select>
-
-              <h3><b>Akses Sertifikat langsung dibuka?</b></h3>
-              <v-select
-                v-model="pembinaan.able_akses_sertifikat_pembinaan"
-                :items="tampilan_web_items"
-                item-text="teks"
-                item-value="value"
-                label="Tampikan file sertifikat kepada pengguna?"
-                prepend-icon="mdi-format-list-bulleted-square"
-              ></v-select>
-
-              <h3><b>Hanya Super Admin yang bisa edit?</b></h3>
-              <v-select
-                v-model="pembinaan.only_super_admin"
-                :items="tampilan_web_items"
-                item-text="teks"
-                item-value="value"
-                label="Hanya super admin yang bisa edit>"
-                prepend-icon="mdi-format-list-bulleted-square"
-              ></v-select>
-
-              <v-divider class="my-4"></v-divider>
-
-              <!-- BAGIAN AKSES2 PEMBINAAN -->
-              
-              <h2 class="mt-4 secondary--text darken-2--text"><b>Bagian Sesi</b> 
-                <v-btn
-                  class="mx-2 my-2"
-                  fab
-                  dark
-                  small
-                  @click="createSession()"
-                  color="primary">
-                  <v-icon dark>
-                    mdi-plus
-                  </v-icon>
-                </v-btn>
-              </h2>
-
-              <div class="col-12">
-                <draggable tag="ul" :list="list_sesi_edit" class="list-group" handle=".handle">
-                  <div
-                    class="my-4 list-group-item"
-                    v-for="(element, idx) in list_sesi_edit"
-                    :key="'sesi_'+element.name+'_'+idx"
-                  >
-                    <v-row class="my-4">
-
-                      <v-tooltip bottom>
-                        <template v-slot:activator="{ on, attrs }">
-                          <v-icon v-on="on" v-bind="attrs" color="secondary lighten-1" class="mr-2 handle">mdi-gesture-tap-hold</v-icon>
+              <h3><b>Ikon/Logo Inovation Yang Ada</b></h3>
+              <v-row>
+                <v-col
+                  class="d-flex child-flex"
+                  cols="auto">
+                  <v-img 
+                    class="grey lighten-2" 
+                    style="max-width: 400px;" 
+                    contain
+                    :src="imagePreviewLink(inovation_edit.ikon_inovation)"
+                    lazy-src="https://picsum.photos/510/300?random">
+                    <template v-slot:placeholder>
+                          <v-row
+                            class="fill-height ma-0"
+                            align="center"
+                            justify="center"
+                          >
+                            <v-progress-circular
+                              indeterminate
+                              color="grey lighten-5"
+                            ></v-progress-circular>
+                          </v-row>
                         </template>
-                        <span>Klik dan tahan untuk memindahkan urutan sesi</span>
-                      </v-tooltip>
+                  </v-img>
+                </v-col>
+              </v-row>
 
-                      
-                      <h3 class="mx-2 secondary--text lighten-1--text">SESI {{idx + 1}}</h3>
+              <h3><b>Gambar Pendukung Inovasi Yang Baru</b></h3>
+              <!-- image carousel -->
+              <validation-provider
+                v-slot="{ errors }"
+                rules="size:20480000"
+                style="z-index:2010;">
+                  <v-file-input
+                    v-model="inovation_edit.gambar_inovation_new"
+                    accept="image/*"
+                    show-size
+                    chips
+                    prepend-icon="mdi-camera"
+                    label="Silahkan pilih gambar - gambar pilihan untuk di upload"
+                    multiple
+                  ></v-file-input>
+              </validation-provider>
 
-                      <v-spacer></v-spacer>
-
-                      <v-icon class="red--text ml-2 close" @click="removeAt(idx)">mdi-close</v-icon>
-                    </v-row>
-                    <v-row class="ma-2">
-                      <v-expansion-panels focusable>
-                        <v-expansion-panel>
-                          <v-expansion-panel-header>Detail</v-expansion-panel-header>
-                            <v-expansion-panel-content style="padding: 5px;min-height:45vh;">
-                              <!-- Detail session -->
-                              <!-- sambutan sesi -->
-                              <h3 class="my-2 secondary--text lighten-1--text"><b>Profil Sesi</b></h3>
-                              <h4><b>Nama Sesi</b></h4>
-                              <v-text-field
-                                v-model="sesi_edit.judul_sesi[element.id]"
-                                :error-messages="errors"
-                                label="Nama sesi"
-                                prepend-icon="mdi-format-title"
-                              ></v-text-field>
-
-                              <!-- kategori pembinaan -->
-                              <h4 class="mt-2"><b>Kategori/Jenis Sesi</b></h4>
-                              <v-select
-                                v-model="sesi_edit.jenis_sesi[element.id]"
-                                :items="jenis_pembinaan_items"
-                                item-text="teks"
-                                item-value="value"
-                                :error-messages="errors"
-                                label="Kategori/Jenis Pembinaan"
-                                prepend-icon="mdi-format-list-bulleted-square"
-                                required
-                              ></v-select>
-
-                              <!-- waktu pembinaan awal -->
-                              <h4 class="mt-2"><b>Mulai Sesi</b></h4>
-                              <v-row>
-                                <v-col class="col-6">
-                                  <v-date-picker
-                                    v-model="sesi_edit.tanggal_awal_sesi[element.id]"
-                                    color="green lighten-1"
-                                    header-color="primary"
-                                  ></v-date-picker>
-                                </v-col>
-                                <v-col class="col-6">
-                                  <v-time-picker
-                                    v-model="sesi_edit.waktu_awal_sesi[element.id]"
-                                    format="24hr"
-                                  ></v-time-picker>
-                                </v-col>
-                              </v-row>
-
-                              <!-- waktu pembinaan awal -->
-                              <h4 class="mt-2"><b>Akhir Sesi</b></h4>
-                              <v-row>
-                                <v-col class="col-6">
-                                  <v-date-picker
-                                    v-model="sesi_edit.tanggal_akhir_sesi[element.id]"
-                                    color="green lighten-1"
-                                    header-color="primary"
-                                  ></v-date-picker>
-                                </v-col>
-                                <v-col class="col-6">
-                                  <v-time-picker
-                                    v-model="sesi_edit.waktu_akhir_sesi[element.id]"
-                                    format="24hr"
-                                  ></v-time-picker>
-                                </v-col>
-                              </v-row>
-
-                              <!-- pemateri sesi -->
-                              <h4  class="mt-2"><b>Pemateri oleh</b></h4>
-                              <v-text-field
-                                :error-messages="errors"
-                                label="Pemateri sesi"
-                                prepend-icon="mdi-account-group"
-                                class='pemateri_sesi'
-                                v-model="sesi_edit.pemateri_sesi[element.id]"
-                              ></v-text-field>
-
-                              <v-divider class="my-2"></v-divider>  
-                              <v-row>
-                                <h3 class="my-2 secondary--text lighten-1--text"><b>Tambahan Profile Sesi</b></h3>
-                                <v-tooltip bottom>
-                                  <template v-slot:activator="{ on, attrs }">
-                                    <v-icon v-on="on" v-bind="attrs" class="mx-2" color="secondary lighten-1">mdi-help-circle</v-icon>
-                                  </template>
-                                  <span>Tidak wajib diisi</span>
-                                </v-tooltip>
-                                </v-row>
-                              <!-- sambutan sesi -->
-                              <h4 class="mt-2 grey--text darken-2--text"><b>Sambutan oleh</b></h4>
-                              <h5>*jika ada</h5>
-                              <v-text-field
-                                :error-messages="errors"
-                                label="Sambutan sesi"
-                                prepend-icon="mdi-account-question"
-                                class='sambutan_sesi'
-                                v-model="sesi_edit.sambutan_sesi[element.id]"
-                              ></v-text-field>
-
-                              <!-- moderator sesi -->
-                              <h4 class="mt-2 grey--text darken-2--text"><b>Moderator oleh</b></h4>
-                              <h5>*jika ada</h5>
-                              <v-text-field
-                                :error-messages="errors"
-                                label="Moderator sesi"
-                                prepend-icon="mdi-account-question"
-                                class='moderator_sesi'
-                                v-model="sesi_edit.moderator_sesi[element.id]"
-                              ></v-text-field>
-
-                              <!-- penampil sesi -->
-                              <h4 class="mt-2 grey--text darken-2--text"><b>Penampilan\Pertunjukkan oleh</b></h4>
-                              <h5>*jika ada</h5>
-                              <v-text-field
-                                :error-messages="errors"
-                                label="Penampilan sesi"
-                                prepend-icon="mdi-account-question"
-                                class='penampil_sesi'
-                                v-model="sesi_edit.penampil_sesi[element.id]"
-                              ></v-text-field>
-
-                              <v-divider class="my-2"></v-divider>
-
-                              <h3 class="my-2 secondary--text lighten-1--text"><b>Konten Sesi</b></h3>
-                              
-
-                              <h4 class="mt-2"><b>Isi Konten/Penjelasan Sesi</b></h4>
-                              <ckeditor 
-                                :editor="editor" 
-                                class='moderator_sesi mb-4'
-                                v-model="sesi_edit.konten_sesi[element.id]" 
-                                :config="editorConfig" 
-                                ></ckeditor>
-
-                              <v-divider class="my-2"></v-divider>
-
-                              <h3 class="my-2 secondary--text lighten-1--text"><b>Tautan/Link dan Materi terkait Sesi</b></h3>
-
-                              <!-- tautan sesi -->
-                              <h4 class="mt-2"><b>Tautan/Link Kelas Interaktif (Zoom, Google Meet)</b></h4>
-                              <v-text-field
-                                :error-messages="errors"
-                                label="Tautan/Link Kelas Interaktif"
-                                prepend-icon="mdi-google-classroom"
-                                class='tautan_sesi'
-                                v-model="sesi_edit.tautan_sesi[element.id]"
-                              ></v-text-field>
-
-                              <!-- bahan materi sesi -->
-                               <h4 class="mt-2"><b>Tautan/Link Materi Sesi</b></h4>
-                              <v-text-field
-                                :error-messages="errors"
-                                label="Tautan materi"
-                                prepend-icon="mdi-clipboard-text"
-                                class='materi_sesi'
-                                v-model="sesi_edit.materi_sesi[element.id]"
-                              ></v-text-field>
-
-                              <!-- kuis sesi -->
-                              <h4 class="mt-2"><b>Tautan/Link Kuis Tugas Sesi</b></h4>
-                              <v-text-field
-                                :error-messages="errors"
-                                label="Tautan tugas"
-                                prepend-icon="mdi-clipboard-text"
-                                class='tugas_sesi'
-                                v-model="sesi_edit.tugas_sesi[element.id]"
-                              ></v-text-field>
-
-                              <!-- <h4 class="mt-2"><b>Lampiran/Dokumen Materi Sesi</b></h4>
-                              <v-file-input
-                                chips
-                                multiple
-                                show-size
-                                truncate-length="49"
-                                :error-messages="errors"
-                                label="File/Dokumen/Lampiran untuk Pendukung"
-                                prepend-icon="mdi-file"
-                                class='lampiran_sesi'
-                                v-model="sesi_edit.lampiran_sesi[element.id]"
-                              ></v-file-input> -->
-
-                              <v-divider class="my-4"></v-divider>
-                              <h3 class="my-2 secondary--text lighten-1--text"><b>Hak Akses Sesi</b></h3>
-                              
-                              <h4 class="mt-2"><b>Buka akses tautan sesi?</b></h4>
-                              <v-select
-                                :items="tampilan_web_items"
-                                item-text="teks"
-                                item-value="value"
-                                label="Buka akses tautan sesi"
-                                prepend-icon="mdi-format-list-bulleted-square"
-                                class='able_tautan_sesi'
-                                v-model="sesi_edit.able_tautan_sesi[element.id]"
-                              ></v-select>
-
-                              <h4 class="mt-2"><b>Buka akses tautan tugas?</b></h4>
-                              <v-select
-                                :items="tampilan_web_items"
-                                item-text="teks"
-                                item-value="value"
-                                label="Buka akses tautan tugas"
-                                prepend-icon="mdi-format-list-bulleted-square"
-                                class='able_tugas_sesi'
-                                v-model="sesi_edit.able_tugas_sesi[element.id]"
-                              ></v-select>
-
-                              <h4 class="mt-2"><b>Buka akses lampiran sesi (materi/file)?</b></h4>
-                              <v-select
-                                :items="tampilan_web_items"
-                                item-text="teks"
-                                item-value="value"
-                                label="Buka akses lampiran file"
-                                prepend-icon="mdi-format-list-bulleted-square"
-                                class='able_lampiran_sesi'
-                                v-model="sesi_edit.able_lampiran_sesi[element.id]"
-                              ></v-select>
-
-                              <h4 class="mt-2"><b>Buka akses sesi sebagai materi ke halaman publik?</b></h4>
-                              <v-select
-                                :items="tampilan_web_items"
-                                item-text="teks"
-                                item-value="value"
-                                label="Buka akses sesi sebagai materi ke halaman muka publik"
-                                prepend-icon="mdi-format-list-bulleted-square"
-                                class='able_lampiran_sesi'
-                                v-model="sesi_edit.able_materi_publik[element.id]"
-                              ></v-select>
-                            </v-expansion-panel-content>
-                        </v-expansion-panel>
-                      </v-expansion-panels>
-                    </v-row>
-                  </div>
-                </draggable>
-              </div>
+              <h3><b>Gambar Pendukung Inovasi Yang Ada (Jika Ingin Diperbaharui)</b></h3>
+              <v-row>
+                <v-col
+                  v-for="gambar in gambar_inovation_edit_arr()"
+                  :key="gambar"
+                  class="d-flex child-flex"
+                  cols="4"
+                >
+                  <v-img
+                    :src="url_base+'/api/gambar_inovation/'+gambar"
+                    lazy-src="https://picsum.photos/510/300?random"
+                    class="grey lighten-2"
+                    contain
+                  >
+                    <template v-slot:placeholder>
+                      <v-row
+                        class="fill-height ma-0"
+                        align="center"
+                        justify="center"
+                      >
+                        <v-progress-circular
+                          indeterminate
+                          color="grey lighten-5"
+                        ></v-progress-circular>
+                      </v-row>
+                    </template>
+                  </v-img>
+                </v-col>
+              </v-row>
 
             </form>
             <v-divider class="my-4"></v-divider>
           </validation-observer>
-          
         </v-container>
       </v-card>
     </v-dialog>
     <!-- DIALOG UNTUK VIEW DATA -->
-    <v-dialog v-model="dialogPembinaanView" fullscreen hide-overlay style="z-index:2051" transition="dialog-bottom-transition">
+    <v-dialog v-model="dialogInovationView" fullscreen hide-overlay style="z-index:2051" transition="dialog-bottom-transition">
       <v-card>
         <v-toolbar
           dark
@@ -597,870 +270,68 @@ L<template>
           >
             <v-icon>mdi-close</v-icon>
           </v-btn>
-          <v-toolbar-title>{{ pembinaan_view.judul_pembinaan }} </v-toolbar-title>
+          <v-toolbar-title>{{ inovation.nama_inovation }} </v-toolbar-title>
           <v-spacer></v-spacer>
-          <!-- <v-toolbar-items>
-            <v-btn
-              dark
-              text
-              v-if="!edit_crud_dialog"
-              @click="submitViewItem()"
-            >
-              Jadikan Data Ini Default
-            </v-btn>
-          </v-toolbar-items> -->
         </v-toolbar>
         <v-divider></v-divider>
         <v-container fluid>
-            <v-container bg grid-list-md text-xs-center>
-              <v-layout row wrap align-center>
-                <v-flex>
-                  <v-img  style="max-width:80vw" :src="url_base + '/api/sampul_pembinaan/'+pembinaan_view.sampul_pembinaan" alt=""/>
-                </v-flex>
-              </v-layout>
-            </v-container>
-            <p><b>Judul Pembinaan</b> : {{ pembinaan_view.judul_pembinaan }}</p>
-            <p><b>Jenis Pembinaan</b> : {{ pembinaan_view.jenis_pembinaan }}</p>
-            <p><b>Tanggal Pembinaan Awal</b> : {{ pembinaan_view.tanggal_awal_pembinaan }}</p>
-            <p><b>Tanggal Pembinaan Akhir</b> : {{ pembinaan_view.tanggal_akhir_pembinaan }}</p>
-            <p><b>Teks Pengantar</b> : {{ pembinaan_view.teks_pengantar_pembinaan }}</p>
-            <p><b>Pembina Pembinaan</b> : {{ pembinaan_view.pembina_pembinaan }}</p>
-            <p><b>Penyunting Pembinaan</b> : {{ pembinaan_view.editors_pembinaan }}</p>
-            <p><b>Sertifikat Pembinaan</b> : {{ pembinaan_view.sertifikat_pembinaan }}</p>
-            <p><b>Tags Pembinaan</b> :{{pembinaan_view.tags_pembinaan}}</p>
-            <v-chip
-                v-for="(filename, index) in tagviewnames_computed"
-                :key="'tagviewname_'+index"
-                color="primary darken--2"
-                medium
-                style="margin:5px;"
-              >
-              <span class="pr-2">
-                {{ filename }}
-              </span>
-            </v-chip>
-            <p><b>Teks Pengantar</b> :</p>
-            <v-textarea
-              v-model="pembinaan_view.teks_pengantar_pembinaan"
-              :error-messages="errors"
-              filled
-              auto-grow
-              rows="4"
-              row-height="30"
-              shaped
-              :readonly="!edit_phase"
-              style="background-color:lightgrey;"
-              class="black--text"
-              label="Teks Pengantar/Pembuka Pembinaan"
-            ></v-textarea>
-
-            <div v-for="item,idx in list_sesi_view" :key="'list_sesi_'+idx">
-              <v-row class="my-4">
-                <h3 class="mx-2 secondary--text lighten-1--text">SESI {{idx + 1}}</h3>
-
-                <v-spacer></v-spacer>
-              </v-row>
-              <v-row class="ma-2">
-                <v-expansion-panels focusable>
-                  <v-expansion-panel>
-                    <v-expansion-panel-header>Detail</v-expansion-panel-header>
-                      <v-expansion-panel-content style="padding: 5px;min-height:45vh;">
-                        <!-- Detail session -->
-                        <!-- sambutan sesi -->
-                        <h3 class="my-2 secondary--text lighten-1--text"><b>Profil Sesi</b></h3>
-                        <h4><b>Nama Sesi</b></h4>
-                        <v-text-field
-                          v-model="item.judul_sesi"
-                          :error-messages="errors"
-                          label="Nama sesi"
-                          prepend-icon="mdi-format-title"
-                          :readonly="!edit_phase"
-                        ></v-text-field>
-
-                        <!-- kategori pembinaan -->
-                        <h4 class="mt-2"><b>Kategori/Jenis Sesi</b></h4>
-                        <v-select
-                          v-model="item.jenis_sesi"
-                          :items="jenis_pembinaan_items"
-                          item-text="teks"
-                          item-value="value"
-                          :error-messages="errors"
-                          label="Kategori/Jenis Pembinaan"
-                          prepend-icon="mdi-format-list-bulleted-square"
-                          required
-                          :readonly="!edit_phase"
-                        ></v-select>
-
-                        <!-- waktu pembinaan awal -->
-                        <h4 class="mt-2"><b>Mulai Sesi</b></h4>
-                        <v-row>
-                          <v-col class="col-6">
-                            <v-date-picker
-                              v-model="item.tanggal_awal_sesi"
-                              color="green lighten-1"
-                              header-color="primary"
-                              :readonly="!edit_phase"
-                            ></v-date-picker>
-                          </v-col>
-                          <v-col class="col-6">
-                            <v-time-picker
-                              v-model="item.waktu_awal_sesi"
-                              format="24hr"
-                              :readonly="!edit_phase"
-                            ></v-time-picker>
-                          </v-col>
-                        </v-row>
-
-                        <!-- waktu pembinaan awal -->
-                        <h4 class="mt-2"><b>Akhir Sesi</b></h4>
-                        <v-row>
-                          <v-col class="col-6">
-                            <v-date-picker
-                              v-model="item.tanggal_akhir_sesi"
-                              color="green lighten-1"
-                              header-color="primary"
-                              :readonly="!edit_phase"
-                            ></v-date-picker>
-                          </v-col>
-                          <v-col class="col-6">
-                            <v-time-picker
-                              v-model="item.waktu_akhir_sesi"
-                              format="24hr"
-                              :readonly="!edit_phase"
-                            ></v-time-picker>
-                          </v-col>
-                        </v-row>
-
-                        <!-- pemateri sesi -->
-                        <h4  class="mt-2"><b>Pemateri oleh</b></h4>
-                        <v-text-field
-                          :error-messages="errors"
-                          label="Pemateri sesi"
-                          prepend-icon="mdi-account-group"
-                          class='pemateri_sesi'
-                          v-model="item.pemateri_sesi"
-                          :readonly="!edit_phase"
-                        ></v-text-field>
-
-                        <v-divider class="my-2"></v-divider>  
-                        <v-row>
-                          <h3 class="my-2 secondary--text lighten-1--text"><b>Tambahan Profile Sesi</b></h3>
-                          <v-tooltip bottom>
-                            <template v-slot:activator="{ on, attrs }">
-                              <v-icon v-on="on" v-bind="attrs" class="mx-2" color="secondary lighten-1">mdi-help-circle</v-icon>
-                            </template>
-                            <span>Tidak wajib diisi</span>
-                          </v-tooltip>
-                          </v-row>
-                        <!-- sambutan sesi -->
-                        <h4 class="mt-2 grey--text darken-2--text"><b>Sambutan oleh</b></h4>
-                        <h5>*jika ada</h5>
-                        <v-text-field
-                          :error-messages="errors"
-                          label="Sambutan sesi"
-                          prepend-icon="mdi-account-question"
-                          class='sambutan_sesi'
-                          v-model="item.sambutan_sesi"
-                          :readonly="!edit_phase"
-                        ></v-text-field>
-
-                        <!-- moderator sesi -->
-                        <h4 class="mt-2 grey--text darken-2--text"><b>Moderator oleh</b></h4>
-                        <h5>*jika ada</h5>
-                        <v-text-field
-                          :error-messages="errors"
-                          label="Moderator sesi"
-                          prepend-icon="mdi-account-question"
-                          class='moderator_sesi'
-                          v-model="item.moderator_sesi"
-                          :readonly="!edit_phase"
-                        ></v-text-field>
-
-                        <!-- penampil sesi -->
-                        <h4 class="mt-2 grey--text darken-2--text"><b>Penampilan\Pertunjukkan oleh</b></h4>
-                        <h5>*jika ada</h5>
-                        <v-text-field
-                          :error-messages="errors"
-                          label="Penampilan sesi"
-                          prepend-icon="mdi-account-question"
-                          class='penampil_sesi'
-                          v-model="item.penampil_sesi"
-                          :readonly="!edit_phase"
-                        ></v-text-field>
-
-                        <v-divider class="my-2"></v-divider>
-
-                        <h3 class="my-2 secondary--text lighten-1--text"><b>Konten Sesi</b></h3>
-                        
-
-                        <h4 class="mt-2"><b>Isi Konten/Penjelasan Sesi</b></h4>
-                        <ckeditor class='moderator_sesi mb-4' :editor="editor_read" :value="item.konten_sesi" :disabled="editorDisabled" :config="editorConfig_read"></ckeditor>
-        
-
-                        <v-divider class="my-2"></v-divider>
-
-                        <h3 class="my-2 secondary--text lighten-1--text"><b>Tautan/Link dan Materi terkait Sesi</b></h3>
-
-                        <!-- tautan sesi -->
-                        <h4 class="mt-2"><b>Tautan/Link Kelas Interaktif (Zoom, Google Meet)</b></h4>
-                        <v-text-field
-                          :error-messages="errors"
-                          label="Tautan/Link Kelas Interaktif"
-                          prepend-icon="mdi-google-classroom"
-                          class='tautan_sesi'
-                          :readonly="!edit_phase"
-                          v-model="item.tautan_sesi"
-                        ></v-text-field>
-
-                        <!-- bahan materi sesi -->
-                          <h4 class="mt-2"><b>Tautan/Link Materi Sesi</b></h4>
-                        <v-text-field
-                          :error-messages="errors"
-                          label="Tautan materi"
-                          prepend-icon="mdi-clipboard-text"
-                          class='materi_sesi'
-                          v-model="item.materi_sesi"
-                          :readonly="!edit_phase"
-                        ></v-text-field>
-
-                        <!-- kuis sesi -->
-                        <h4 class="mt-2"><b>Tautan/Link Kuis Tugas Sesi</b></h4>
-                        <v-text-field
-                          :error-messages="errors"
-                          label="Tautan tugas"
-                          prepend-icon="mdi-clipboard-text"
-                          class='tugas_sesi'
-                          v-model="item.tugas_sesi"
-                          :readonly="!edit_phase"
-                        ></v-text-field>
-
-                        <v-divider class="my-4"></v-divider>
-                        <h3 class="my-2 secondary--text lighten-1--text"><b>Hak Akses Sesi</b></h3>
-                        
-                        <h4 class="mt-2"><b>Buka akses tautan sesi?</b></h4>
-                        <v-select
-                          :items="tampilan_web_items"
-                          item-text="teks"
-                          item-value="value"
-                          label="Buka akses tautan sesi"
-                          prepend-icon="mdi-format-list-bulleted-square"
-                          class='able_tautan_sesi'
-                          v-model="item.able_tautan_sesi"
-                          :readonly="!edit_phase"
-                        ></v-select>
-
-                        <h4 class="mt-2"><b>Buka akses tautan tugas?</b></h4>
-                        <v-select
-                          :items="tampilan_web_items"
-                          item-text="teks"
-                          item-value="value"
-                          label="Buka akses tautan tugas"
-                          prepend-icon="mdi-format-list-bulleted-square"
-                          class='able_tugas_sesi'
-                          v-model="item.able_tugas_sesi"
-                          :readonly="!edit_phase"
-                        ></v-select>
-
-                        <h4 class="mt-2"><b>Buka akses lampiran sesi (materi/file)?</b></h4>
-                        <v-select
-                          :items="tampilan_web_items"
-                          item-text="teks"
-                          item-value="value"
-                          label="Buka akses lampiran file"
-                          prepend-icon="mdi-format-list-bulleted-square"
-                          class='able_lampiran_sesi'
-                          v-model="item.able_lampiran_sesi"
-                          :readonly="!edit_phase"
-                        ></v-select>
-
-                        <h4 class="mt-2"><b>Buka akses sesi sebagai materi ke halaman publik?</b></h4>
-                        <v-select
-                          :items="tampilan_web_items"
-                          item-text="teks"
-                          item-value="value"
-                          label="Buka akses sesi sebagai materi ke halaman muka publik"
-                          prepend-icon="mdi-format-list-bulleted-square"
-                          class='able_lampiran_sesi'
-                          v-model="item.able_materi_publik"
-                          :readonly="!edit_phase"
-                        ></v-select>
-                      </v-expansion-panel-content>
-                  </v-expansion-panel>
-                </v-expansion-panels>
-              </v-row>
+            <div style="text-align: center; content-align:center">
+              <v-img class="mx-auto"
+                style="max-width: 300px;"
+                :src="imagePreviewLink(inovation.ikon_inovation)"
+                lazy-src="https://picsum.photos/510/300?random">
+                <template v-slot:placeholder>
+                  <v-row
+                    class="fill-height ma-0"
+                    align="center"
+                    justify="center"
+                  >
+                    <v-progress-circular
+                      indeterminate
+                      color="white lighten-5"
+                    ></v-progress-circular>
+                  </v-row>
+                </template>
+              </v-img>
             </div>
-        </v-container>
-      </v-card>
-    </v-dialog>
-    <!-- DIALOG UNTUK CREATE DATA -->
-    <v-dialog v-model="dialogPembinaanCreate" fullscreen hide-overlay style="z-index:2052" transition="dialog-bottom-transition">
-      <v-card>
-        <v-toolbar
-          dark
-          :color="warna_crud_dialog">
-          <v-btn
-            icon
-            dark
-            @click="closeCreateItem()"
-          >
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-          <v-toolbar-title>RANCANGAN PEMBINAAN </v-toolbar-title>
-          <v-spacer></v-spacer>
-          <v-toolbar-items>
-            <v-btn
-              dark
-              text
-              @click="submitCreateItem()"
-            >
-              BUAT PEMBINAAN
-            </v-btn>
-          </v-toolbar-items>
-        </v-toolbar>
-        <v-divider></v-divider>
-        <v-container>
-          <validation-observer
-            ref="observer"
-            v-slot="{ invalid }"
-          >
-            <form @submit.prevent="submit">
-              <h2 class="mt-4 secondary--text"><b>Profil Pembinaan</b></h2>
-              <!-- penanggung jawab pembinaan -->
-              <h3><b>Penanggung Jawab Pembinaan</b></h3>
-              <v-text-field
-                v-model="pembinaan.pembina_pembinaan"
-                :error-messages="errors"
-                label="Penanggung Jawab Pembinaan"
-                prepend-icon="mdi-account"
-              ></v-text-field>
-
-              <!-- judul pembinaan -->
-              <h3><b>Judul Pembinaan</b></h3>
-              <v-text-field
-                v-model="pembinaan.judul_pembinaan"
-                :error-messages="errors"
-                label="Judul Pembinaan"
-                prepend-icon="mdi-alphabetical-variant"
-              ></v-text-field>
-
-              <!-- kategori pembinaan -->
-              <h3 class="mt-2"><b>Kategori/Jenis Pembinaan</b></h3>
-              <v-select
-                v-model="pembinaan.jenis_pembinaan"
-                :items="jenis_pembinaan_items"
-                item-text="teks"
-                item-value="value"
-                :error-messages="errors"
-                label="Kategori/Jenis Pembinaan"
-                prepend-icon="mdi-format-list-bulleted-square"
-                required
-              ></v-select>
-
-              <!-- kalimat pengantar pembinaan -->
-              <h3><b>Kalimat Pengantar Pembinaan</b></h3>
-              <validation-provider
-                v-slot="{ errors }"
-                name="Kalimat Pengantar Pembinaan"
-                rules="required"
+            <p><b>Judul Inovasi</b> : {{ inovation.nama_inovation }}</p>
+            <p><b>Dekripsi</b> : {{ inovation.deskripsi_inovation }}</p>
+            <p><b>Dipublikasikan oleh</b> : {{ inovation.created_by }}</p>
+            <p><b>Satuan Kerja Asal</b> : {{ inovation.satker_asal_inovation }}</p>
+            <p><b>Email Verifikator</b> : {{ inovation.verified_by }}</p>
+            <p><b>Update Terakhir</b> : {{ new Date(inovation.updated_at).toUTCString() }}</p>
+            <p><b>Gambar Pendukung Inovasi Yang Ada</b></p>
+            <v-row>
+              <v-col
+                v-for="gambar in gambar_inovation_view_arr()"
+                :key="gambar"
+                class="d-flex child-flex"
+                cols="4"
               >
-                <v-textarea
-                  v-model="pembinaan.teks_pengantar_pembinaan"
-                  :error-messages="errors"
-                  filled
-                  auto-grow
-                  rows="4"
-                  row-height="30"
-                  shaped
-                  label="Kalimat Pengantar/Pembuka Pembinaan"
-                ></v-textarea>
-              </validation-provider>
-
-              <!-- sampul pembinaan -->
-              <h3><b>Gambar Depan Pembinaan</b></h3>
-              <validation-provider
-                v-slot="{ errors }"
-                rules="size:20480"
-                style="z-index:2010;"
-
-              >
-                <v-file-input
-                  v-model="pembinaan.sampul_pembinaan"
-                  chips
-                  show-size
-                  truncate-length="49"
-                  :error-messages="errors"
-                  label="Gambar Cover Depan Pembinaan"
-                  prepend-icon="mdi-image"
-                ></v-file-input>
-              </validation-provider>
-              <v-img :src="imagePreview"/>
-
-              <v-divider class="my-4"></v-divider>
-
-              <!-- tanggal awal pembinaan -->
-              <h3><b>Tanggal Awal Pembinaan</b></h3>
-              <v-menu
-                ref="menu_tanggal_awal_pembinaan"
-                v-model="menu_tanggal_awal_pembinaan"
-                :close-on-content-click="false"
-                :return-value.sync="pembinaan.tanggal_awal_pembinaan"
-                transition="scale-transition"
-                offset-y
-                min-width="auto"
-              >
-                <template v-slot:activator="{ on, attrs }">
-                  <v-text-field
-                    v-model="pembinaan.tanggal_awal_pembinaan"
-                    label="Tanggal Awal Pembinaan"
-                    prepend-icon="mdi-calendar"
-                    readonly
-                    v-bind="attrs"
-                    v-on="on"
-                  ></v-text-field>
-                </template>
-                <v-date-picker
-                  v-model="pembinaan.tanggal_awal_pembinaan"
-                  no-title
-                  scrollable
+                <v-img
+                  :src="url_base+'/api/gambar_inovation/'+gambar"
+                  lazy-src="https://picsum.photos/510/300?random"
+                  class="grey lighten-2"
+                  contain
                 >
-                  <v-spacer></v-spacer>
-                  <v-btn
-                    text
-                    color="primary"
-                    @click="pembinaan.tanggal_awal_pembinaan = null"
-                  >
-                    Cancel
-                  </v-btn>
-                  <v-btn
-                    text
-                    color="primary"
-                    @click="$refs.menu_tanggal_awal_pembinaan.save(pembinaan.tanggal_awal_pembinaan)"
-                  >
-                    OK
-                  </v-btn>
-                </v-date-picker>
-              </v-menu>
-
-              <!-- tanggal akhir pembinaan -->
-              <h3><b>Tanggal Akhir Pembinaan</b></h3>
-              <v-menu
-                ref="menu_tanggal_akhir_pembinaan"
-                v-model="menu_tanggal_akhir_pembinaan"
-                :close-on-content-click="false"
-                :return-value.sync="pembinaan.tanggal_akhir_pembinaan"
-                transition="scale-transition"
-                offset-y
-                min-width="auto"
-              >
-                <template v-slot:activator="{ on, attrs }">
-                  <v-text-field
-                    v-model="pembinaan.tanggal_akhir_pembinaan"
-                    label="Tanggal Akhir Pembinaan"
-                    prepend-icon="mdi-calendar"
-                    readonly
-                    v-bind="attrs"
-                    v-on="on"
-                  ></v-text-field>
-                </template>
-                <v-date-picker
-                  v-model="pembinaan.tanggal_akhir_pembinaan"
-                  no-title
-                  scrollable
-                >
-                  <v-spacer></v-spacer>
-                  <v-btn
-                    text
-                    color="primary"
-                    @click="pembinaan.tanggal_akhir_pembinaan = null"
-                  >
-                    Cancel
-                  </v-btn>
-                  <v-btn
-                    text
-                    color="primary"
-                    @click="$refs.menu_tanggal_akhir_pembinaan.save(pembinaan.tanggal_akhir_pembinaan)"
-                  >
-                    OK
-                  </v-btn>
-                </v-date-picker>
-              </v-menu>
-
-              <v-divider class="my-4"></v-divider>
-
-              <h2 class="mt-4 secondary--text"><b>Sertifikat, Editor Tambahan, Tags</b></h2>
-
-              <!-- sampul pembinaan -->
-              <h3><b>Tautan Sertifikat Pembinaan</b></h3>
-              <v-text-field
-                v-model="pembinaan.sertifikat_pembinaan"
-                :error-messages="errors"
-                label="Tautan/Link Sertifikat Pembinaan"
-                prepend-icon="mdi-certificate"
-              ></v-text-field>
-
-              <h3 class="mt-2"><b>Editor Tambahan untuk Pembinaan</b></h3>
-              <h5>Pisahkan dengan enter</h5>
-              <v-layout wrap>
-                <v-flex xs12>
-                  <v-combobox multiple
-                    color="primary"
-                    v-model="editors_select" 
-                    label="Email penyunting tambahan pembinaan" 
-                    append-icon
-                    chips
-                    deletable-chips
-                    class="tag-input"
-                    :search-input.sync="editors_search" 
-                    @keyup.tab="updateEditors"
-                    @paste="updateEditors">
-                  </v-combobox>
-                </v-flex>
-              </v-layout>
-
-              <!-- tags pembinaan -->
-              <h3 class="mt-2"><b>Tags/Hashtag Pembinaan </b></h3>
-              <h5>Pisahkan dengan enter tanpa hashtag</h5>
-              <v-layout wrap>
-                <v-flex xs12>
-                  <v-combobox multiple
-                    color="primary"
-                    v-model="tags_select" 
-                    label="Tags Pembinaan" 
-                    append-icon
-                    chips
-                    deletable-chips
-                    class="tag-input"
-                    :search-input.sync="tags_search" 
-                    @keyup.tab="updateTags"
-                    @paste="updateTags">
-                  </v-combobox>
-                </v-flex>
-              </v-layout>
-                <!-- {{ tags_search }} -->
-
-              <v-divider class="my-4"></v-divider>
-
-              <!-- BAGIAN AKSES2 PEMBINAAN -->
-              
-              <h2 class="mt-4 secondary--text"><b>Hak Akses Pembinaan</b></h2>
-              
-              <h3><b>Akses Tampilkan Pembinaan Ke Publik (Untuk Lihat)</b></h3>
-              <v-select
-                v-model="pembinaan.able_akses_halaman_pembinaan"
-                :items="tampilan_web_items"
-                item-text="teks"
-                item-value="value"
-                label="Tampilankan di Halaman Muka/Publik?"
-                prepend-icon="mdi-format-list-bulleted-square"
-              ></v-select>
-
-              <h3><b>Akses Pendaftaran secara mandiri dibuka?</b></h3>
-              <v-select
-                v-model="pembinaan.able_akses_pendaftaran_pembinaan"
-                :items="tampilan_web_items"
-                item-text="teks"
-                item-value="value"
-                label="Buka akses pendaftaran mandiri?"
-                prepend-icon="mdi-format-list-bulleted-square"
-              ></v-select>
-
-              <h3><b>Akses Sertifikat langsung dibuka?</b></h3>
-              <v-select
-                v-model="pembinaan.able_akses_sertifikat_pembinaan"
-                :items="tampilan_web_items"
-                item-text="teks"
-                item-value="value"
-                label="Tampikan file sertifikat kepada pengguna?"
-                prepend-icon="mdi-format-list-bulleted-square"
-              ></v-select>
-
-              <h3><b>Hanya Super Admin yang bisa edit?</b></h3>
-              <v-select
-                v-model="pembinaan.only_super_admin"
-                :items="tampilan_web_items"
-                item-text="teks"
-                item-value="value"
-                label="Hanya super admin yang bisa edit>"
-                prepend-icon="mdi-format-list-bulleted-square"
-              ></v-select>
-
-              <v-divider class="my-4"></v-divider>
-
-              <!-- BAGIAN AKSES2 PEMBINAAN -->
-              
-              <h2 class="mt-4 secondary--text darken-2--text"><b>Bagian Sesi</b> 
-                <v-btn
-                  class="mx-2 my-2"
-                  fab
-                  dark
-                  small
-                  @click="createSession()"
-                  color="primary">
-                  <v-icon dark>
-                    mdi-plus
-                  </v-icon>
-                </v-btn>
-              </h2>
-
-              <div class="col-12">
-                <draggable tag="ul" :list="list_sesi" class="list-group" handle=".handle">
-                  <div
-                    class="my-4 list-group-item"
-                    v-for="(element, idx) in list_sesi"
-                    :key="'sesi_'+element.name+'_'+idx"
-                  >
-                    <v-row class="my-4">
-
-                      <v-tooltip bottom>
-                        <template v-slot:activator="{ on, attrs }">
-                          <v-icon v-on="on" v-bind="attrs" color="secondary lighten-1" class="mr-2 handle">mdi-gesture-tap-hold</v-icon>
-                        </template>
-                        <span>Klik dan tahan untuk memindahkan urutan sesi</span>
-                      </v-tooltip>
-
-                      
-                      <h3 class="mx-2 secondary--text lighten-1--text">SESI {{idx + 1}}</h3>
-
-                      <v-spacer></v-spacer>
-
-                      <v-icon class="red--text ml-2 close" @click="removeAt(idx)">mdi-close</v-icon>
+                  <template v-slot:placeholder>
+                    <v-row
+                      class="fill-height ma-0"
+                      align="center"
+                      justify="center"
+                    >
+                      <v-progress-circular
+                        indeterminate
+                        color="grey lighten-5"
+                      ></v-progress-circular>
                     </v-row>
-                    <v-row class="ma-2">
-                      <v-expansion-panels focusable>
-                        <v-expansion-panel>
-                          <v-expansion-panel-header>Detail</v-expansion-panel-header>
-                            <v-expansion-panel-content style="padding: 5px;min-height:45vh;">
-                              <!-- Detail session -->
-                              <!-- sambutan sesi -->
-                              <h3 class="my-2 secondary--text lighten-1--text"><b>Profil Sesi</b></h3>
-                              <h4><b>Nama Sesi</b></h4>
-                              <v-text-field
-                                v-model="sesi.judul_sesi[element.id]"
-                                :error-messages="errors"
-                                label="Nama sesi"
-                                prepend-icon="mdi-format-title"
-                              ></v-text-field>
+                  </template>
+                </v-img>
+              </v-col>
+            </v-row>
 
-                              <!-- kategori pembinaan -->
-                              <h4 class="mt-2"><b>Kategori/Jenis Sesi</b></h4>
-                              <v-select
-                                v-model="sesi.jenis_sesi[element.id]"
-                                :items="jenis_pembinaan_items"
-                                item-text="teks"
-                                item-value="value"
-                                :error-messages="errors"
-                                label="Kategori/Jenis Pembinaan"
-                                prepend-icon="mdi-format-list-bulleted-square"
-                                required
-                              ></v-select>
-
-                              <!-- waktu pembinaan awal -->
-                              <h4 class="mt-2"><b>Mulai Sesi</b></h4>
-                              <v-row>
-                                <v-col class="col-6">
-                                  <v-date-picker
-                                    v-model="sesi.tanggal_awal_sesi[element.id]"
-                                    color="green lighten-1"
-                                    header-color="primary"
-                                  ></v-date-picker>
-                                </v-col>
-                                <v-col class="col-6">
-                                  <v-time-picker
-                                    v-model="sesi.waktu_awal_sesi[element.id]"
-                                    format="24hr"
-                                  ></v-time-picker>
-                                </v-col>
-                              </v-row>
-
-                              <!-- waktu pembinaan awal -->
-                              <h4 class="mt-2"><b>Akhir Sesi</b></h4>
-                              <v-row>
-                                <v-col class="col-6">
-                                  <v-date-picker
-                                    v-model="sesi.tanggal_akhir_sesi[element.id]"
-                                    color="green lighten-1"
-                                    header-color="primary"
-                                  ></v-date-picker>
-                                </v-col>
-                                <v-col class="col-6">
-                                  <v-time-picker
-                                    v-model="sesi.waktu_akhir_sesi[element.id]"
-                                    format="24hr"
-                                  ></v-time-picker>
-                                </v-col>
-                              </v-row>
-
-                              <!-- pemateri sesi -->
-                              <h4  class="mt-2"><b>Pemateri oleh</b></h4>
-                              <v-text-field
-                                :error-messages="errors"
-                                label="Pemateri sesi"
-                                prepend-icon="mdi-account-group"
-                                class='pemateri_sesi'
-                                v-model="sesi.pemateri_sesi[element.id]"
-                              ></v-text-field>
-
-                              <v-divider class="my-2"></v-divider>  
-                              <v-row>
-                                <h3 class="my-2 secondary--text lighten-1--text"><b>Tambahan Profile Sesi</b></h3>
-                                <v-tooltip bottom>
-                                  <template v-slot:activator="{ on, attrs }">
-                                    <v-icon v-on="on" v-bind="attrs" class="mx-2" color="secondary lighten-1">mdi-help-circle</v-icon>
-                                  </template>
-                                  <span>Tidak wajib diisi</span>
-                                </v-tooltip>
-                                </v-row>
-                              <!-- sambutan sesi -->
-                              <h4 class="mt-2 grey--text darken-2--text"><b>Sambutan oleh</b></h4>
-                              <h5>*jika ada</h5>
-                              <v-text-field
-                                :error-messages="errors"
-                                label="Sambutan sesi"
-                                prepend-icon="mdi-account-question"
-                                class='sambutan_sesi'
-                                v-model="sesi.sambutan_sesi[element.id]"
-                              ></v-text-field>
-
-                              <!-- moderator sesi -->
-                              <h4 class="mt-2 grey--text darken-2--text"><b>Moderator oleh</b></h4>
-                              <h5>*jika ada</h5>
-                              <v-text-field
-                                :error-messages="errors"
-                                label="Moderator sesi"
-                                prepend-icon="mdi-account-question"
-                                class='moderator_sesi'
-                                v-model="sesi.moderator_sesi[element.id]"
-                              ></v-text-field>
-
-                              <!-- penampil sesi -->
-                              <h4 class="mt-2 grey--text darken-2--text"><b>Penampilan\Pertunjukkan oleh</b></h4>
-                              <h5>*jika ada</h5>
-                              <v-text-field
-                                :error-messages="errors"
-                                label="Penampilan sesi"
-                                prepend-icon="mdi-account-question"
-                                class='penampil_sesi'
-                                v-model="sesi.penampil_sesi[element.id]"
-                              ></v-text-field>
-
-                              <v-divider class="my-2"></v-divider>
-
-                              <h3 class="my-2 secondary--text lighten-1--text"><b>Konten Sesi</b></h3>
-                              
-
-                              <h4 class="mt-2"><b>Isi Konten/Penjelasan Sesi</b></h4>
-                              <ckeditor 
-                                :editor="editor" 
-                                class='moderator_sesi mb-4'
-                                v-model="sesi.konten_sesi[element.id]" 
-                                :config="editorConfig" 
-                                ></ckeditor>
-
-                              <v-divider class="my-2"></v-divider>
-
-                              <h3 class="my-2 secondary--text lighten-1--text"><b>Tautan/Link dan Materi terkait Sesi</b></h3>
-
-                              <!-- tautan sesi -->
-                              <h4 class="mt-2"><b>Tautan/Link Kelas Interaktif (Zoom, Google Meet)</b></h4>
-                              <v-text-field
-                                :error-messages="errors"
-                                label="Tautan/Link Kelas Interaktif"
-                                prepend-icon="mdi-google-classroom"
-                                class='tautan_sesi'
-                                v-model="sesi.tautan_sesi[element.id]"
-                              ></v-text-field>
-
-                              <!-- bahan materi sesi -->
-                               <h4 class="mt-2"><b>Tautan/Link Materi Sesi</b></h4>
-                              <v-text-field
-                                :error-messages="errors"
-                                label="Tautan materi"
-                                prepend-icon="mdi-clipboard-text"
-                                class='materi_sesi'
-                                v-model="sesi.materi_sesi[element.id]"
-                              ></v-text-field>
-
-                              <!-- kuis sesi -->
-                              <h4 class="mt-2"><b>Tautan/Link Kuis Tugas Sesi</b></h4>
-                              <v-text-field
-                                :error-messages="errors"
-                                label="Tautan tugas"
-                                prepend-icon="mdi-clipboard-text"
-                                class='tugas_sesi'
-                                v-model="sesi.tugas_sesi[element.id]"
-                              ></v-text-field>
-
-                              <!-- <h4 class="mt-2"><b>Lampiran/Dokumen Materi Sesi</b></h4>
-                              <v-file-input
-                                chips
-                                multiple
-                                show-size
-                                truncate-length="49"
-                                :error-messages="errors"
-                                label="File/Dokumen/Lampiran untuk Pendukung"
-                                prepend-icon="mdi-file"
-                                class='lampiran_sesi'
-                                v-model="sesi.lampiran_sesi[element.id]"
-                              ></v-file-input> -->
-
-                              <v-divider class="my-4"></v-divider>
-                              <h3 class="my-2 secondary--text lighten-1--text"><b>Hak Akses Sesi</b></h3>
-                              
-                              <h4 class="mt-2"><b>Buka akses tautan sesi?</b></h4>
-                              <v-select
-                                :items="tampilan_web_items"
-                                item-text="teks"
-                                item-value="value"
-                                label="Buka akses tautan sesi"
-                                prepend-icon="mdi-format-list-bulleted-square"
-                                class='able_tautan_sesi'
-                                v-model="sesi.able_tautan_sesi[element.id]"
-                              ></v-select>
-
-                              <h4 class="mt-2"><b>Buka akses tautan tugas?</b></h4>
-                              <v-select
-                                :items="tampilan_web_items"
-                                item-text="teks"
-                                item-value="value"
-                                label="Buka akses tautan tugas"
-                                prepend-icon="mdi-format-list-bulleted-square"
-                                class='able_tugas_sesi'
-                                v-model="sesi.able_tugas_sesi[element.id]"
-                              ></v-select>
-
-                              <h4 class="mt-2"><b>Buka akses lampiran sesi (materi/file)?</b></h4>
-                              <v-select
-                                :items="tampilan_web_items"
-                                item-text="teks"
-                                item-value="value"
-                                label="Buka akses lampiran file"
-                                prepend-icon="mdi-format-list-bulleted-square"
-                                class='able_lampiran_sesi'
-                                v-model="sesi.able_lampiran_sesi[element.id]"
-                              ></v-select>
-
-                              <h4 class="mt-2"><b>Buka akses sesi sebagai materi ke halaman publik?</b></h4>
-                              <v-select
-                                :items="tampilan_web_items"
-                                item-text="teks"
-                                item-value="value"
-                                label="Buka akses sesi sebagai materi ke halaman muka publik"
-                                prepend-icon="mdi-format-list-bulleted-square"
-                                class='able_lampiran_sesi'
-                                v-model="sesi.able_materi_publik[element.id]"
-                              ></v-select>
-                            </v-expansion-panel-content>
-                        </v-expansion-panel>
-                      </v-expansion-panels>
-                    </v-row>
-                  </div>
-                </draggable>
-              </div>
-
-            </form>
-            <v-divider class="my-4"></v-divider>
-          </validation-observer>
-          
+            <p><b>Isi Inovasi/Berita/Konten</b> :</p>
+            <ckeditor :editor="editor_read" v-model="inovation.konten_inovation" :disabled="editorDisabled" :config="editorConfig_read"></ckeditor>
         </v-container>
       </v-card>
     </v-dialog>
@@ -1468,9 +339,9 @@ L<template>
     <v-dialog v-model="dialogKonfirmasiHapus" persistent max-width="50vw">
       <v-card>
         <v-card-title class="text-h5">
-          Hapus pembinaan/berita <b>[{{ pembinaan.judul_pembinaan }}]</b>?
+          Hapus inovation/berita [{{ inovation.nama_inovation }}]?
         </v-card-title>
-        <v-card-text>Dengan menghapus pembinaan ini, data akan terhapus didalam daftar pembinaan!</v-card-text>
+        <v-card-text>Dengan menghapus inovation ini, data akan terhapus didalam daftar berita!</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn
@@ -1483,9 +354,9 @@ L<template>
           <v-btn
             color="red"
             text
-            @click="deleteItem(pembinaan)"
+            @click="deleteItem()"
           >
-            Ya, hapus pembinaan
+            Ya, hapus inovation
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -1511,13 +382,13 @@ L<template>
     <v-data-table
       :headers="dessertHeaders"
       :items="desserts"
-      :search="search_aset"
+      :search="search_inovation"
       item-key="nomor_aset"
       class="elevation-1"
     >
       <template v-slot:top>
-        <h2 class="mx-4">DAFTAR PEMBINAAN 
-          <v-btn
+        <h2 class="mx-4">DAFTAR VERIFIKASI INOVASI
+          <!-- <v-btn
             class="mx-2 my-2"
             fab
             dark
@@ -1528,15 +399,15 @@ L<template>
             <v-icon dark>
               mdi-plus
             </v-icon>
-          </v-btn>
+          </v-btn> -->
         </h2>
         <v-toolbar
           flat
         >
         <v-text-field
-          v-model="search_aset"
+          v-model="search_inovation"
           append-icon="mdi-magnify"
-          label="Cari Berita"
+          label="Cari inovation"
           class="mx-4 my-2"
           single-line
           hide-details
@@ -1545,6 +416,19 @@ L<template>
         </v-toolbar>
         <v-divider class="mx-4"></v-divider>
       </template>
+      <template v-slot:item.keanggotaan="{ item }">
+        {{ item.nama_organisasi != null ? "(Organisasi) "+item.nama_organisasi : (item.nama_divisi != null ? "(Divisi) "+item.nama_divisi : "(Tim) "+item.nama_tim) }}
+      </template>
+      <template v-slot:item.penulis_inovation="{ item }">
+        {{ item.penulis_inovation }} ({{ item.created_by }})
+      </template>
+      <template v-slot:item.penyunting_inovation="{ item }">
+        {{ item.penyunting_inovation == null ? '-' : item.penyunting_inovation.toString()+' ('+item.updated_by.toString()+')' }}
+      </template>
+      <template v-slot:item.status_verifikasi_inovation="{ item }">
+        <v-chip v-if="item.status_verifikasi_inovation === 1" color="blue" small dark>Terverifikasi</v-chip>
+        <v-chip v-else color="orange darken-2" small dark>Belum Terverifikasi</v-chip>
+      </template>
       <template v-slot:item.actions="{ item }">
         <v-btn text
           small
@@ -1552,32 +436,54 @@ L<template>
           color="primary darken--3"
           @click="viewItem(item)"
         >
-          LIHAT PEMBINAAN
+          LIHAT INOVATION
         </v-btn>
         <v-btn text
           small
           class="mr-2"
-          color="green"
+          color="green darken-2"
           @click="editItem(item)"
         >
-          EDIT PEMBINAAN
+          EDIT INOVATION
         </v-btn>
         <v-btn text
           small
           class="mr-2"
-          color="red"
+          color="error darken-3"
           @click="konfirmasiDeleteItem(item)"
         >
-          HAPUS PEMBINAAN
+          HAPUS INOVATION
         </v-btn>
+
+        <v-btn text
+          small
+          v-if="item.status_verifikasi_inovation === 1"
+          class="mr-2"
+          color="secondary darken-3"
+          @click="submitUndoneVerification(item)"
+        >
+          BATALKAN VERIFIKASI
+        </v-btn>
+
+        <v-btn text
+          small
+          v-else
+          class="mr-2"
+          color="secondary darken-3"
+          @click="submitVerification(item)"
+        >
+          VERIFIKASI INOVATION
+        </v-btn>
+
       </template>
       <template v-slot:no-data>
-        <v-btn
+        BELUM ADA INOVATION
+        <!-- <v-btn
           color="primary"
           @click="readDataFromAPI"
         >
-          RECALL DATA
-        </v-btn>
+          Reset
+        </v-btn> -->
       </template>
     </v-data-table>
   </v-container>
@@ -1595,7 +501,6 @@ L<template>
   import 'leaflet-draw/dist/leaflet.draw.css'
   import 'leaflet-draw'
 
-  import draggable from 'vuedraggable'
   import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
   // import ClassicEditor from '@ckeditor/ckeditor5-editor-classic/src/classiceditor';
   // import CKFinder from '@ckeditor/ckeditor5-ckfinder/src/ckfinder';
@@ -1645,12 +550,10 @@ L<template>
     message: 'Email must be valid',
   })
 
-  let id = 1;
   export default {
     components: {
       ValidationProvider,
       ValidationObserver,
-      draggable,
       // ClassicEditor,
       // CKFinder,
       // Map,
@@ -1658,19 +561,7 @@ L<template>
     name:'ListAset',
     data () {
       return {
-        edit_phase: false,
-        list_sesi: [
-          { name: "John", text: "", id: 0, waktu_awal_sesi:null, waktu_akhir_sesi: null, konten_sesi: null,},
-        ],
-        list_sesi_edit: [],
-        dragging: true,
-        timeProps: {
-          useSeconds: true,
-          ampmInTitle: true
-        },
-        menu_tanggal_pembinaan: false,
-        menu_tanggal_awal_pembinaan: false,
-        menu_tanggal_akhir_pembinaan: false,
+        menu_tanggal_inovation: false,
         editor: ClassicEditor,
         editorConfig: {
           // plugins: [CKFinder, Link, CKFinderUploadAdapter],
@@ -1709,94 +600,42 @@ L<template>
         componentKey:0,
         label_dialog_foto: "Lokasi Foto",
         latlng_titik: {},
-        pembinaan:{
+        inovation:{
           id_entri:'',
-          judul_pembinaan:'',
-          jenis_pembinaan:'',
-          teks_pembuka_pembinaan:'',
-          teks_isi_pembinaan: '',
-          tanggal_pembinaan:'',
-          geolocation_pembinaan:'',
-          gambar_pembuka_pembinaan:null,
-          lampiran_pembinaan:null,
-          tags_pembinaan:"",
+          nama_inovation:'',
+          ikon_inovation: 'error.png',
+          gambar_inovation: '',
+          tags_inovation:null,
+          status_verifikasi_inovation: null,
         },
-        sesi:{
-          id_entri: [],
-          id_pembinaan: [],
-          id_sesi: [],
-          judul_sesi: [],
-          jenis_sesi: [],
-          sambutan_sesi: [],
-          moderator_sesi: [],
-          pemateri_sesi: [],
-          penampil_sesi: [],
-          tautan_sesi: [],
-          tugas_sesi: [],
-          konten_sesi: [],
-          lampiran_sesi: [],
-          // waktu_mulai_sesi: [],
-          // waktu_akhir_sesi: [],
-          materi_sesi: [],
-          able_tautan_sesi: [],
-          able_tugas_sesi: [],
-          able_lampiran_sesi: [],
-          able_materi_publik: [],
-          tanggal_awal_sesi: [],
-          waktu_awal_sesi: [],
-          tanggal_akhir_sesi: [],
-          waktu_akhir_sesi: [],
+        inovation_edit:{
+          id_entri:'',
+          nama_inovation:'',
+          ikon_inovation: 'error.png',
+          gambar_inovation: '',
+          tags_inovation:null,
+          status_verifikasi_inovation: null,
         },
-        sesi_edit: {
-          id_entri: [],
-          id_pembinaan: [],
-          id_sesi: [],
-          judul_sesi: [],
-          jenis_sesi: [],
-          sambutan_sesi: [],
-          moderator_sesi: [],
-          pemateri_sesi: [],
-          penampil_sesi: [],
-          tautan_sesi: [],
-          tugas_sesi: [],
-          konten_sesi: [],
-          lampiran_sesi: [],
-          // waktu_mulai_sesi: [],
-          // waktu_akhir_sesi: [],
-          materi_sesi: [],
-          able_tautan_sesi: [],
-          able_tugas_sesi: [],
-          able_lampiran_sesi: [],
-          able_materi_publik: [],
-          tanggal_awal_sesi: [],
-          waktu_awal_sesi: [],
-          tanggal_akhir_sesi: [],
-          waktu_akhir_sesi: [],
-        },
-        list_sesi_view: [],
-        pembinaan_view: [],
-        menu_tanggal_awal_sesi: [],
-        menu_waktu_awal_sesi: [],
-        gambar_pembuka_pembinaan:'',
-        jenis_pembinaan_items:[
+        gambar_pembuka_inovation:'',
+        jenis_inovation_items:[
           {teks: 'Pembinaan Statistik', value: 'pembinaan-statistik'},
           {teks: 'Indikator Statistik', value: 'indikator-statistik'},
           {teks: 'Materi Umum', value: 'materi-umum'},
         ],
         tampilan_web_items:[
-          {teks: 'Ya', value: 'true'},
-          {teks: 'Tidak', value: 'false'},
+          {teks: 'Ya', value: true},
+          {teks: 'Tidak', value: false},
         ],
         dialog: false,
-        dialogPembinaanEdit: false,
-        dialogPembinaanView:false,
-        dialogPembinaanCreate: false,
+        dialogInovationEdit: false,
+        dialogInovationView:false,
+        dialogInovationCreate: false,
         dialogHistori:false,
         dialogKonfirmasiHapus: false,
         dialogKonfirmasiHapusFile: false,
         filenameDihapuskan:'',
         jenisfileDihapuskan: '',
-        overlay_list:false,
+        overlay:false,
         lokasi_item: {},
         geolocation:"",
         page: 0,
@@ -1822,28 +661,34 @@ L<template>
         desserts:[],
         dessertHeaders: [
           {
-            text: 'Daftar Pembinaan',
+            text: 'Judul Inovasi',
             align: 'start',
             sortable: true,
-            value: 'judul_pembinaan',
+            value: 'nama_inovation',
+            witdh: '250px',
           },
-          { text: 'Jenis Pembinaan', value: 'jenis_pembinaan' },
-          { text: 'Pembina Pembinaan', value: 'pembina_pembinaan' },
-          { text: 'Tanggal Pembuatan', value: 'created_at' },
-          { text: 'Actions', value: 'actions', sortable: false },
+          {
+            text: 'Keanggotaan Inovasi/Konten',
+            sortable: true,
+            value: 'keanggotaan',
+            width: '350px'
+          },
+          { text: 'Satuan Kerja Inovasi', value: 'satker_asal_inovation' },
+          { text: 'Penulis Inovasi', value: 'created_by' },
+          { text: 'Kontak Hubung', value: 'kontak_hubung_inovation' },
+          { text: 'Status Verifikasi', value: 'status_verifikasi_inovation' },
+          { text: 'Email Verifikator', value: 'verified_by' },
+          { text: 'Actions', value: 'actions', sortable: false , witdh: '300px'},
         ],
         expanded: [],
         singleExpand: false,
         colors: ['green', 'purple', 'indigo', 'cyan', 'teal', 'primary'],
-        search_aset:'',
-        nonce_pembelian: 1,
-        search_pembelian: null,
-        nonce_pembukuan: 1,
-        search_pembukuan: null,
-        nonce_kepemilikan: 1,
-        search_kepemilikan: null,
-        nonce_foto: 1,
-        search_foto: null,
+        search_inovation:'',
+        lampiran_inovation_nonce: 1,
+        lampiran_inovation_search: null,
+        lampiran_inovation_temps: [],
+        lampiran_inovation_deleted: [],
+        lampiran_inovation_names: [],
         aset_history: '',
         judul_crud_dialog: 'Judul',
         warna_crud_dialog: 'primary',
@@ -1853,12 +698,14 @@ L<template>
         tags_select: [],
         tags_items: [],
         tags_search: "",
-        editors_select: [],
-        editors_items: [],
-        editors_search: "",
+        tags_select_edit: [],
+        tags_items_edit: [],
+        tags_search_edit: "",
         errors:'',
         currentUser:{},
         permissions:[],
+        user_memberships: [],
+        user: null,
       }
     },
     watch: {
@@ -1871,107 +718,70 @@ L<template>
         val || this.close()
       },
       deep: true,
+      lampiran_inovation_temps (val, prev) {
+        if (val.length === prev.length) return
+        this.lampiran_inovation_temps = val.map(v => {
+          
+          if (typeof v.text === 'string') {
+            v = {
+              text: v.text,
+              color: 'secondary',
+            }
+
+            this.lampiran_inovation_deleted.push(v)
+
+            this.lampiran_inovation_nonce++
+          }
+
+          return v
+
+        })
+      },
     },
     computed: {
+      showPenggunaBarangTingkatPertamaLainnya(){
+        return this.aset.pengguna_barang_tingkat_pertama == 0 && this.aset.pengguna_barang_tingkat_pertama_lainnya != null
+      },
       filenames_computed(){
         return this.filenames;
       },
       tagnames_computed(){
-        var tags =  (this.pembinaan.tags_pembinaan == null ) ? [] : (this.pembinaan.tags_pembinaan).split(',');
+        var tags =  (this.inovation.tags_inovation == null ) ? [] : (this.inovation.tags_inovation).split(',');
         return tags;
       },
-      tagviewnames_computed(){
-        var tags =  (this.pembinaan_view.tags_pembinaan == null ) ? [] : (this.pembinaan_view.tags_pembinaan).split(',');
+      tageditnames_computed(){
+        var tags =  (this.inovation_edit.tags_inovation == null ) ? [] : (this.inovation_edit.tags_inovation).split(',');
         return tags;
-      },
-      editornames_computed(){
-        var editors =  (this.pembinaan.editors_pembinaan == null ) ? [] : (this.pembinaan.editors_pembinaan).split(',');
-        return editors;
-      },
-      editorviewnames_computed(){
-        var editors =  (this.pembinaan_view.editors_pembinaan == null ) ? [] : (this.pembinaan_view.editors_pembinaan).split(',');
-        return editors;
       },
       imagePreview(){
-        if (!this.pembinaan.sampul_pembinaan) return null;
-          return URL.createObjectURL(this.pembinaan.sampul_pembinaan);
+        if (!this.inovation.ikon_inovation) return null;
+          return URL.createObjectURL(this.inovation.ikon_inovation);
+      },
+      memberships_items_length(){
+        return this.inovation_edit.created_by == this.user.email
       },
     },
     methods: {
-      removeAt(idx) {
-        this.list_sesi.splice(idx, 1);
-        // this.sesi.judul_sesi.splice(idx, 1);
-      },
-      createSession(){
-        this.sesi.judul_sesi[id] = null
-        this.list_sesi.push({ name: "Juan " + id, id, text: "" });
-        id++;
-      },
-      saveTanggalAwalSesi(ref, idx){
-        console.log(ref)
-        this.$refs["menu_tanggal_awal_sesi"].save(this.sesi.tanggal_awal_sesi[idx]);
-        console.log(this.$refs)
-      },
-      saveWaktuAwalSesi(ref){
-        // this.$refs[ref].save(this.sesi.waktu_awal_sesi[idx]);
-      },
       //Reading data from API method. 
-      readDataFromAPI() {
+      async readDataFromAPI() {
         this.loading = true;
-        axios.get('/api/show-pembinaans')
+        await axios.get('/api/get-inovations/supervisor')
           .then((response) => {
             //Then injecting the result to datatable parameters.
-            console.log('ambil data dari database')
-            console.log(response.data)
             this.loading = false;
             this.desserts = response.data;
-          }).catch(errors => {
-            console.log('data eror')
-            this.loading = false;
-            this.desserts = [];
-          }).finally(() => {
-            this.loading = false;
           });
       },
-      save_tanggal_pembinaan () {
-        this.$refs.menu_tanggal_pembinaan.save(pembinaan.tanggal_pembinaan)
+      gambar_inovation_edit_arr(){
+        return this.inovation_edit.gambar_inovation.split(',')
       },
-      save_tanggal_awal_pembinaan () {
-        this.$refs.menu_tanggal_awal_pembinaan.save(pembinaan.tanggal_awal_pembinaan)
-        
+      gambar_inovation_view_arr(){
+        return this.inovation.gambar_inovation.split(',')
       },
-      save_tanggal_akhir_pembinaan () {
-        this.$refs.menu_tanggal_akhir_pembinaan.save(pembinaan.tanggal_akhir_pembinaan)
-      },
-      updateTags() {
-        this.$nextTick(() => {
-          this.tags_select.push(...this.tags_search.split(","));
-          this.pembinaan.tags_pembinaan = this.tags_select;
-          this.$nextTick(() => {
-            this.tags_search = "";
-          });
-        });
-      },
-      updateEditors() {
-        this.$nextTick(() => {
-          this.editors_select.push(...this.editors_search.split(","));
-          this.pembinaan.editors_pembinaan = this.editors_select;
-          this.$nextTick(() => {
-            this.editors_search = "";
-          });
-        });
-      },
-      filter (item, queryText, itemText) {
-        if (item.header) return false
-
-        const hasValue = val => val != null ? val : ''
-
-        const text = hasValue(itemText)
-        const query = hasValue(queryText)
-
-        return text.toString()
-          .toLowerCase()
-          .indexOf(query.toString().toLowerCase()) > -1
+      imagePreviewLink(val){
+        if (!val) return null;
+          var link = this.url_base+'/api/ikon_inovation/'+val.toString()
+          return link;
       },
       json2list(json_data){
         var result = [];
@@ -1981,29 +791,8 @@ L<template>
         // console.log(json_data)
         return result;
       },
-      getCentroid(arr) {
-        var twoTimesSignedArea = 0;
-        var cxTimes6SignedArea = 0;
-        var cyTimes6SignedArea = 0;
-
-        var length = arr.length
-        // console.log(length)
-
-        var x = function (i) { return arr[i % length][0] };
-        var y = function (i) { return arr[i % length][1] };
-
-        for ( var i = 0; i < arr.length; i++) {
-            var twoSA = x(i)*y(i+1) - x(i+1)*y(i);
-            twoTimesSignedArea += twoSA;
-            cxTimes6SignedArea += (x(i) + x(i+1)) * twoSA;
-            cyTimes6SignedArea += (y(i) + y(i+1)) * twoSA;
-        }
-        var sixSignedArea = 3 * twoTimesSignedArea;
-        return [ cxTimes6SignedArea / sixSignedArea, cyTimes6SignedArea / sixSignedArea];        
-      },
       getPreviewFile(file_name, jenis_file){
-        var link = this.url_base + /api/ + jenis_file +'/'+ file_name
-        var label = this.aset.label_aset
+        var link = this.url_base + '/api/' + jenis_file +'/'+ file_name
         var tipe_file = file_name.split('.').slice(-1)[0]
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
         axios(link, {
@@ -2027,49 +816,44 @@ L<template>
             console.log(error);
         });
       },
-      download_rekap_aset(){
-        this.overlay_list = true
-        axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
-        axios.get('/api/rekap-asets/', {
-          responseType: 'blob',
-        }).then((response) => {
-          const nama_zip = "rekap_aset" + ".zip"
-          const url = URL.createObjectURL(new Blob([response.data]))
-          const link = document.createElement('a')
-          link.href = url
-          link.setAttribute(
-            'download',
-            nama_zip
-          )
-          document.body.appendChild(link)
-          link.click()
+      async userMemberships(){
+        await axios.get('/api/user-memberships/PenulisInovasiOrganisasi&PenulisInovasiDivisi&PenulisInovasiTim/true').then(response => {
+            let data = response.data.data
+            // console.log(response.data.data)
+            let memberships = []
+            data.forEach(datum => {
+              if(datum.jenis_keanggotaan == 'organisasi'){
+                memberships.push({text : datum.nama_organisasi, value: datum.id_keanggotaan, type: 'organisasi'})
+              }else if(datum.jenis_keanggotaan == 'divisi'){
+                memberships.push({text : datum.nama_divisi, value: datum.id_keanggotaan, type : 'divisi'})
+              }else if(datum.jenis_keanggotaan == 'tim'){
+                memberships.push({text : datum.nama_tim, value: datum.id_keanggotaan, type: 'tim'})
+              }
+            });
+            this.user_memberships = memberships
         }).catch(errors => {
-          this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(errors.response.data)
-          console.log(errors.response.data)
-          this.warnaSnackbar= "red"
-          this.snackbar = true
-        }).finally(() => {
-          this.overlay_list = false
+            console.log(errors)
         })
       },
       konfirmasiDeleteItem(item){
-        this.pembinaan = item
+        this.inovation = item
         this.dialogKonfirmasiHapus = true
       },
-      deleteItem (item) {
-        this.overlay_list = true
+      async deleteItem () {
+        this.overlay = true
         const config = {
             headers: {
                 'Content-Type': 'multipart/form-data',
             }
         }
         var formData = new FormData();
-        var teks = "";
-        formData.append('id_pembinaan', this.pembinaan.id_pembinaan);
-        formData.append('id_entri', this.pembinaan.id_entri);
+        var $teks = "";
+        formData.append('id_inovation', this.inovation.id_inovation);
+        formData.append('id_entri', this.inovation.id_entri);
+        formData.append('id_keanggotaan', this.inovation.id_keanggotaan);
         console.log(formData);
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
-        axios.post("/api/delete-pembinaan", formData, config).then(response => {
+        await axios.post("/api/delete-inovation", formData, config).then(response => {
           // console.log(response.data)
           if(response.data.status == false){
             this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(response.data.message)
@@ -2078,298 +862,122 @@ L<template>
             this.snackbar = true
           }else{
             this.dialogKonfirmasiHapus = false
-            this.teksSnackbar= "Berhasil menghapus pembinaan "
+            this.teksSnackbar= "Berhasil menghapus profil inovasi "
             this.warnaSnackbar= "success"
             this.snackbar = true
           }
-          
         }).catch(errors => {
           this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(errors.response.data)
           console.log(errors.response.data)
           this.warnaSnackbar= "red"
           this.snackbar = true
-        }).finally(() => {
+        }).finally(async () => {
           // this.clear()
-          this.readDataFromAPI()
+          await this.readDataFromAPI()
           this.isLoading = false
-          this.overlay_list = false
-        })   
+          this.overlay = false
+        })
       },
       viewItem(item){
         // alert(id_entri)
         // this.view_crud_dialog = true
         // this.edit_crud_dialog = false
-        var refthis = this
+        this.dialogInovationView = true
+        this.inovation = item
+        // this.inovation.tampilan_web = (this.inovation.tampilan_web === 'true')
+        this.gambar_pembuka_inovation = this.url_base+"/api/gambar_pembuka_inovation/"+this.inovation.gambar_pembuka_inovation
+        this.filenames = item.lampiran_inovation == null ? [] : (item.lampiran_inovation).split(',')
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
-        // this.pembinaan.tampilan_web = (this.pembinaan.tampilan_web === 'true')
-        axios.get("/api/show-pembinaans/"+item.id_pembinaan).then(response => {
-          // console.log(response.data)
-          if(response.data.status == false){
-            this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(response.data.message),
-            this.warnaSnackbar= "red",
-            this.snackbar = true
-          }else{
-            this.clearCreateItem()
-            console.log('data terakses')
-            console.log(response.data)
-            this.pembinaan_view = response.data.pembinaan
-            this.list_sesi_view = response.data.sesis
-            
-          }
-        }).catch(errors => {
-          console.log(errors.response.data)
-          this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(errors.response.data.errors),
-          this.warnaSnackbar= "red",
-          this.snackbar = true
-        }).finally(() => {
-          this.isLoading = false
-          this.overlay_entri = false
-          this.overlay_list = false
-        });
-        this.dialogPembinaanView = true
-        this.overlay_list = false
-      }, 
-      editItem(item){
-        this.dialogPembinaanEdit = true
-        this.edit_phase = true
-        this.pembinaan = {};
-        this.edit_phase= true;
-        this.list_sesi_edit =[];
-        this.sesi_edit.id_entri = [];
-        this.sesi_edit.id_sesi = [];
-        this.sesi_edit.id_pembinaan = [];
-        this.sesi_edit.judul_sesi = [];
-        this.sesi_edit.sambutan_sesi = [];
-        this.sesi_edit.moderator_sesi = [];
-        this.sesi_edit.pemateri_sesi = [];
-        this.sesi_edit.penampil_sesi = [];
-        this.sesi_edit.tugas_sesi = [];
-        this.sesi_edit.tautan_sesi = [];
-        this.sesi_edit.materi_sesi = [];
-        this.sesi_edit.konten_sesi = [];
-        this.sesi_edit.tanggal_awal_sesi = [];
-        this.sesi_edit.tanggal_akhir_sesi = [];
-        this.sesi_edit.waktu_awal_sesi = [];
-        this.sesi_edit.waktu_akhir_sesi = [];
-        this.sesi_edit.able_tautan_sesi = [];
-        this.sesi_edit.able_tugas_sesi = [];
-        this.sesi_edit.able_lampiran_sesi = [];
-        this.sesi_edit.able_materi_publik = [];
-        var refs = this
-
-        axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
-        // this.pembinaan.tampilan_web = (this.pembinaan.tampilan_web === 'true')
-        axios.get("/api/show-pembinaans/"+item.id_pembinaan).then(response => {
-          // console.log(response.data)
-          if(response.data.status == false){
-            this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(response.data.message),
-            this.warnaSnackbar= "red",
-            this.snackbar = true
-          }else{
-            this.clearCreateItem()
-            console.log('data terakses')
-            console.log(response.data)
-            refs.pembinaan = response.data.pembinaan
-            refs.pembinaan.image_preview = response.data.pembinaan.sampul_pembinaan
-            refs.pembinaan.sampul_pembinaan = null
-            refs.editors_select = response.data.pembinaan.editors_pembinaan != null ? (response.data.pembinaan.editors_pembinaan).split(',') : null;
-            refs.tags_select = response.data.pembinaan.tags_pembinaan != null ? (response.data.pembinaan.tags_pembinaan).split(',') : null;
-            var list_sesi_temp = response.data.sesis
-            var id = 0;
-            list_sesi_temp.forEach(element => {
-              this.list_sesi_edit.push(
-                { name: element.judul_sesi, id: id},
-              );
-              this.sesi_edit.id_entri[id] = (element.id_entri);
-              this.sesi_edit.id_sesi[id] = (element.id_sesi);
-              this.sesi_edit.id_pembinaan[id] = (element.id_pembinaan);
-              this.sesi_edit.judul_sesi[id] = (element.judul_sesi);
-              this.sesi_edit.jenis_sesi[id] = (element.jenis_sesi);
-              this.sesi_edit.sambutan_sesi[id] = (element.sambutan_sesi);
-              this.sesi_edit.moderator_sesi[id] = (element.moderator_sesi);
-              this.sesi_edit.pemateri_sesi[id] = (element.pemateri_sesi);
-              this.sesi_edit.penampil_sesi[id] = (element.penampil_sesi);
-              this.sesi_edit.tugas_sesi[id] = (element.tugas_sesi);
-              this.sesi_edit.tautan_sesi[id] = (element.tautan_sesi);
-              this.sesi_edit.materi_sesi[id] = (element.materi_sesi);
-              this.sesi_edit.konten_sesi[id] = (element.konten_sesi);
-              this.sesi_edit.tanggal_awal_sesi[id] = (element.tanggal_awal_sesi);
-              this.sesi_edit.tanggal_akhir_sesi[id] = (element.tanggal_akhir_sesi);
-              this.sesi_edit.waktu_awal_sesi[id] = (element.waktu_awal_sesi);
-              this.sesi_edit.waktu_akhir_sesi[id] = (element.waktu_akhir_sesi);
-              this.sesi_edit.able_tautan_sesi[id] = (element.able_tautan_sesi);
-              this.sesi_edit.able_tugas_sesi[id] = (element.able_tugas_sesi);
-              this.sesi_edit.able_lampiran_sesi[id] = (element.able_lampiran_sesi);
-              this.sesi_edit.able_materi_publik[id] = (element.able_materi_publik);
-              id++;
-            });
-            
-          }
-        }).catch(errors => {
-          console.log(errors)
-          this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(errors),
-          this.warnaSnackbar= "red",
-          this.snackbar = true
-        }).finally(() => {
-          this.isLoading = false
-          this.overlay_entri = false
-          this.overlay_list = false
-        });
-        this.dialogPembinaanEdit = true
-        this.overlay_list = false
-
+        this.overlay = false
       },
-      createItem(){
-        this.pembinaan.id_entri=''
-        this.pembinaan.judul_pembinaan=''
-        this.pembinaan.jenis_pembinaan=null
-        this.pembinaan.teks_pembuka_pembinaan=''
-        this.pembinaan.teks_isi_pembinaan= ''
-        this.pembinaan.tanggal_pembinaan=''
-        this.pembinaan.geolocation_pembinaan=''
-        this.pembinaan.gambar_pembuka_pembinaan=null
-        this.pembinaan.lampiran_pembinaan=null
-        this.pembinaan.tags_pembinaan=null
-        
-        this.dialogPembinaanCreate = true
+      async editItem(item){
+        this.layout = true
+        this.inovation_edit = item
+        this.inovation_edit.status_verifikasi_inovation = (this.inovation_edit.status_verifikasi_inovation === 1)
+        await this.userMemberships()
+        this.dialogInovationEdit = true
+        this.edit_crud_dialog = true
+        this.dialogInovationEdit = true
+        this.layout = false
       },
-      submitEditItem(){
-        this.$refs.observer.validate()
-        this.overlay_list = true
-        this.isLoading = "secondary"
+      async submitEditItem(){
+        var status_form = await this.$refs.observer_edit_inovation.validate()
+        this.overlay = true
+        if(status_form == true){
+          this.isLoading = "secondary"
+          var formData = new FormData();
+          const config = {
+              headers: {
+                  'Content-Type': 'multipart/form-data',
+              }
+          }
 
-        var formData = new FormData();
-        const config = {
-            headers: {
-                'Content-Type': 'multipart/form-data',
+          // menambahkan data inovation kedalam form untuk di upload
+          formData.append('id_inovation', this.inovation_edit.id_inovation);
+          formData.append('id_keanggotaan', this.inovation_edit.id_keanggotaan);
+          formData.append('nama_inovation', this.inovation_edit.nama_inovation);
+          formData.append('satker_asal_inovation', this.inovation_edit.satker_asal_inovation);
+          formData.append('kontak_hubung_inovation', this.inovation_edit.kontak_hubung_inovation);
+          formData.append('deskripsi_inovation', this.inovation_edit.deskripsi_inovation);
+          formData.append('konten_inovation', this.inovation_edit.konten_inovation);
+          formData.append('tautan_materi_inovation', this.inovation_edit.tautan_materi_inovation);
+          formData.append('tautan_kode_inovation', this.inovation_edit.tautan_kode_inovation);
+          formData.append('ikon_inovation', this.inovation_edit.ikon_inovation);
+          formData.append('created_by', this.inovation_edit.created_by);
+          formData.append('gambar_inovation', this.inovation_edit.gambar_inovation);
+          // formData.append('tags_inovation', JSON.stringify(this.tags_select));
+          if(this.inovation_edit.ikon_inovation_new != null){
+              formData.append("ikon_inovation_new", this.inovation_edit.ikon_inovation_new, this.inovation_edit.ikon_inovation_new.name);
+          }
+          var file = null;
+          var filenames = [];
+          if(this.inovation_edit.gambar_inovation_new != null){
+            for (let file of this.inovation_edit.gambar_inovation_new) {
+              formData.append(`gambar_inovation_new_file[]`, file, file.name);
+              filenames.push(file.name);
+              formData.append(`gambar_inovation_new_filename[]`, file.name);
             }
-        }
+              formData.append(`gambar_inovation_new`, JSON.stringify(filenames));
+          }
 
-        // menambahkan data pembinaan kedalam form untuk di upload
-        formData.append('id_pembinaan', this.pembinaan.id_pembinaan);
-        formData.append('judul_pembinaan', this.pembinaan.judul_pembinaan);
-        formData.append('jenis_pembinaan', this.pembinaan.jenis_pembinaan);
-        formData.append('teks_pengantar_pembinaan', this.pembinaan.teks_pengantar_pembinaan);
-        formData.append('pembina_pembinaan', this.pembinaan.pembina_pembinaan);
-        formData.append('konten_pembinaan', this.pembinaan.konten_pembinaan);
-        formData.append('sertifikat_pembinaan', this.pembinaan.sertifikat_pembinaan);
-        formData.append('tanggal_awal_pembinaan', this.pembinaan.tanggal_awal_pembinaan);
-        formData.append('tanggal_akhir_pembinaan', this.pembinaan.tanggal_akhir_pembinaan);
-        formData.append('editors_pembinaan', JSON.stringify(this.editors_select));
-        formData.append('tags_pembinaan', JSON.stringify(this.tags_select));
-        formData.append('able_akses_halaman_pembinaan', this.pembinaan.able_akses_halaman_pembinaan);
-        formData.append('able_akses_sertifikat_pembinaan', this.pembinaan.able_akses_sertifikat_pembinaan);
-        formData.append('able_akses_pendaftaran_pembinaan', this.pembinaan.able_akses_pendaftaran_pembinaan);
-        formData.append('only_super_admin', this.pembinaan.only_super_admin);
-        if(this.pembinaan.sampul_pembinaan != null){
-            formData.append("sampul_pembinaan", this.pembinaan.sampul_pembinaan, this.pembinaan.sampul_pembinaan.name);
-        }
-        formData.append('sampul_pembinaan', this.pembinaan.sampul_pembinaan);
-        formData.append('sampul_pembinaan_old', this.pembinaan.image_preview);
-        
-        // menambahkan data sesi
-        var id_sesi = 0;
-        var file = null;
-        var lampiran_sesi = [];
-        var filenames = [];
-        this.list_sesi_edit.forEach(element => {
-          id_sesi = element.id;
-          formData.append(`list_sesi[${id_sesi}]`, id_sesi);
-          formData.append(`id_entri[${id_sesi}]`, this.sesi_edit.id_entri[id_sesi]);
-          formData.append(`id_pembinaan[${id_sesi}]`, this.sesi_edit.id_pembinaan[id_sesi]);
-          formData.append(`id_sesi[${id_sesi}]`, this.sesi_edit.id_sesi[id_sesi]);
-          formData.append(`judul_sesi[${id_sesi}]`, this.sesi_edit.judul_sesi[id_sesi]);
-          formData.append(`jenis_sesi[${id_sesi}]`, this.sesi_edit.jenis_sesi[id_sesi]);
-          formData.append(`sambutan_sesi[${id_sesi}]`, this.sesi_edit.sambutan_sesi[id_sesi]);
-          formData.append(`moderator_sesi[${id_sesi}]`, this.sesi_edit.moderator_sesi[id_sesi]);
-          formData.append(`pemateri_sesi[${id_sesi}]`, this.sesi_edit.pemateri_sesi[id_sesi]);
-          formData.append(`penampil_sesi[${id_sesi}]`, this.sesi_edit.penampil_sesi[id_sesi]);
-          formData.append(`tautan_sesi[${id_sesi}]`, this.sesi_edit.tautan_sesi[id_sesi]);
-          formData.append(`tugas_sesi[${id_sesi}]`, this.sesi_edit.tugas_sesi[id_sesi]);
-          formData.append(`materi_sesi[${id_sesi}]`, this.sesi_edit.materi_sesi[id_sesi]);
-          formData.append(`konten_sesi[${id_sesi}]`, this.sesi_edit.konten_sesi[id_sesi]);
-          formData.append(`tanggal_awal_sesi[${id_sesi}]`, this.sesi_edit.tanggal_awal_sesi[id_sesi]);
-          formData.append(`tanggal_akhir_sesi[${id_sesi}]`, this.sesi_edit.tanggal_akhir_sesi[id_sesi]);
-          formData.append(`waktu_awal_sesi[${id_sesi}]`, this.sesi_edit.waktu_awal_sesi[id_sesi]);
-          formData.append(`waktu_akhir_sesi[${id_sesi}]`, this.sesi_edit.waktu_akhir_sesi[id_sesi]);
-          formData.append(`able_tautan_sesi[${id_sesi}]`, this.sesi_edit.able_tautan_sesi[id_sesi]);
-          formData.append(`able_tugas_sesi[${id_sesi}]`, this.sesi_edit.able_tugas_sesi[id_sesi]);
-          formData.append(`able_lampiran_sesi[${id_sesi}]`, this.sesi_edit.able_lampiran_sesi[id_sesi]);
-          formData.append(`able_materi_publik[${id_sesi}]`, this.sesi_edit.able_materi_publik[id_sesi]);
-        });
-
-        formData.append(`lampiran_sesi`, JSON.stringify(lampiran_sesi));
-
-        // console.log(formData)
-
-        axios.post("/api/update-pembinaan", formData, config).then(response => {
-          // console.log(response.data)
-          if(response.data.status == false){
-            this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(response.data.message),
+          await axios.post("/api/update-inovation", formData, config).then(response => {
+            // console.log(response.data)
+            if(response.data.status == false){
+              this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(response.data.message),
+              this.warnaSnackbar= "red",
+              this.snackbar = true
+            }else{
+              this.teksSnackbar= JSON.stringify(response.data.message),
+              this.warnaSnackbar= "green",
+              this.snackbar = true
+              this.dialogInovationEdit = false
+              this.clearCreateItem()
+            }
+          }).catch(errors => {
+            console.log(errors.response.data)
+            this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(errors.response.data.errors),
             this.warnaSnackbar= "red",
             this.snackbar = true
-          }else{
-            this.teksSnackbar= "Berhasil menambahkan data aset ",
-            this.warnaSnackbar= "green",
-            this.snackbar = true
-            this.clearCreateItem()
-          }
-        }).catch(errors => {
-          console.log(errors.response.data)
-          this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(errors.response.data.errors),
+          }).finally(async () => {
+            await this.readDataFromAPI();
+            this.isLoading = false
+            this.overlay = false
+          });
+          // end of upload
+          this.inovation_edit = {
+            gambar_inovation: "",
+          };
+        }else{
+          this.teksSnackbar= "Terjadi Kesalahan : Form masih ada belum valid",
           this.warnaSnackbar= "red",
           this.snackbar = true
-        }).finally(() => {
-          this.readDataFromAPI();
-          this.isLoading = false
-          this.overlay_entri = false
-          this.overlay_list = false
-          this.dialogPembinaanEdit = false
-        });
-        // end of upload
-      this.pembinaan = {};
-      this.edit_phase= false;
-      this.list_sesi_edit =[];
-      this.list_sesi =[];
-       this.overlay_list = true
-      },
-      submitViewItem(){
-        // alert(this.restored_id)
-        this.overlay_list = true
-        const config = {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            }
+          this.overlay = false
         }
-
-        // declare form data
-        var formData = new FormData();
-        
-        // additional data
-        formData.append('id_aset', this.aset.id_aset);
-        formData.append('id_entri', this.restored_id);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
-        axios.post("/api/restore-data-aset", formData, config).then(response => {
-          console.log(response.data)
-          this.teksSnackbar= "Berhasil memutakhirkan data aset "
-          this.warnaSnackbar= "success"
-        }).catch(errors => {
-          this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(errors.response.data)
-          console.log(errors.response.data)
-          this.warnaSnackbar= "red"
-        }).finally(() => {
-          // this.clear()
-          this.readDataFromAPI()
-          this.dialogPembinaanView = false 
-          this.dialogHistori = false
-          this.isLoading = false
-          this.overlay_list = false
-          this.snackbar = true
-        })
       },
-      submitCreateItem(){
+      async submitVerification(item){
+        // console.log(this.inovation)
         // start of upload
-        this.overlay_list = true
+        this.overlay = true
         this.isLoading = "orange"
         const config = {
             headers: {
@@ -2377,78 +985,18 @@ L<template>
             }
         }
         var formData = new FormData();
+        formData.append('id_inovation', item.id_inovation);
+        formData.append('id_keanggotaan', item.id_keanggotaan);
+        formData.append('status_verifikasi_inovation', true);
 
-        // menambahkan data pembinaan kedalam form untuk di upload
-        formData.append('judul_pembinaan', this.pembinaan.judul_pembinaan);
-        formData.append('jenis_pembinaan', this.pembinaan.jenis_pembinaan);
-        formData.append('teks_pengantar_pembinaan', this.pembinaan.teks_pengantar_pembinaan);
-        formData.append('pembina_pembinaan', this.pembinaan.pembina_pembinaan);
-        formData.append('konten_pembinaan', this.pembinaan.konten_pembinaan);
-        formData.append('sampul_pembinaan', this.pembinaan.sampul_pembinaan);
-        formData.append('sertifikat_pembinaan', this.pembinaan.sertifikat_pembinaan);
-        formData.append('tanggal_awal_pembinaan', this.pembinaan.tanggal_awal_pembinaan);
-        formData.append('tanggal_akhir_pembinaan', this.pembinaan.tanggal_akhir_pembinaan);
-        formData.append('editors_pembinaan', JSON.stringify(this.editors_select));
-        formData.append('tags_pembinaan', JSON.stringify(this.tags_select));
-        formData.append('able_akses_halaman_pembinaan', this.pembinaan.able_akses_halaman_pembinaan);
-        formData.append('able_akses_sertifikat_pembinaan', this.pembinaan.able_akses_sertifikat_pembinaan);
-        formData.append('able_akses_pendaftaran_pembinaan', this.pembinaan.able_akses_pendaftaran_pembinaan);
-        formData.append('only_super_admin', this.pembinaan.only_super_admin);
-        if(this.pembinaan.sampul_pembinaan != null){
-            formData.append("sampul_pembinaan", this.pembinaan.sampul_pembinaan, this.pembinaan.sampul_pembinaan.name);
-        }
-        
-        // menambahkan data sesi
-        var id_sesi = 0;
-        var file = null;
-        var lampiran_sesi = [];
-        var filenames = [];
-        this.list_sesi.forEach(element => {
-          id_sesi = element.id;
-          formData.append(`list_sesi[${id_sesi}]`, id_sesi);
-          formData.append(`judul_sesi[${id_sesi}]`, this.sesi.judul_sesi[id_sesi]);
-          formData.append(`jenis_sesi[${id_sesi}]`, this.sesi.jenis_sesi[id_sesi]);
-          formData.append(`sambutan_sesi[${id_sesi}]`, this.sesi.sambutan_sesi[id_sesi]);
-          formData.append(`moderator_sesi[${id_sesi}]`, this.sesi.moderator_sesi[id_sesi]);
-          formData.append(`pemateri_sesi[${id_sesi}]`, this.sesi.pemateri_sesi[id_sesi]);
-          formData.append(`penampil_sesi[${id_sesi}]`, this.sesi.penampil_sesi[id_sesi]);
-          formData.append(`tautan_sesi[${id_sesi}]`, this.sesi.tautan_sesi[id_sesi]);
-          formData.append(`tugas_sesi[${id_sesi}]`, this.sesi.tugas_sesi[id_sesi]);
-          formData.append(`materi_sesi[${id_sesi}]`, this.sesi.materi_sesi[id_sesi]);
-          formData.append(`konten_sesi[${id_sesi}]`, this.sesi.konten_sesi[id_sesi]);
-          formData.append(`tanggal_awal_sesi[${id_sesi}]`, this.sesi.tanggal_awal_sesi[id_sesi]);
-          formData.append(`tanggal_akhir_sesi[${id_sesi}]`, this.sesi.tanggal_akhir_sesi[id_sesi]);
-          formData.append(`waktu_awal_sesi[${id_sesi}]`, this.sesi.waktu_awal_sesi[id_sesi]);
-          formData.append(`waktu_akhir_sesi[${id_sesi}]`, this.sesi.waktu_akhir_sesi[id_sesi]);
-          formData.append(`able_tautan_sesi[${id_sesi}]`, this.sesi.able_tautan_sesi[id_sesi]);
-          formData.append(`able_tugas_sesi[${id_sesi}]`, this.sesi.able_tugas_sesi[id_sesi]);
-          formData.append(`able_lampiran_sesi[${id_sesi}]`, this.sesi.able_lampiran_sesi[id_sesi]);
-          formData.append(`able_materi_publik[${id_sesi}]`, this.sesi.able_materi_publik[id_sesi]);
-
-          // if(this.sesi.lampiran_sesi[id_sesi] != null){
-          //   filenames = [];
-          //   for (let file of this.sesi.lampiran_sesi[id_sesi]) {
-          //     formData.append(`lampiran_sesi[${id_sesi}][]`, file, file.name);
-          //     filenames.push(file.name);
-          //     formData.append(`lampiran_sesi_filename[${id_sesi}][]`, file.name);
-          //   }
-          //   lampiran_sesi.push(filenames);
-          // }
-          // id_sesi++;
-        });
-
-        formData.append(`lampiran_sesi`, JSON.stringify(lampiran_sesi));
-
-        console.log(formData)
-
-        axios.post("/api/insert-pembinaan", formData, config).then(response => {
+        await axios.post("/api/verification-inovation", formData, config).then(response => {
           // console.log(response.data)
           if(response.data.status == false){
             this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(response.data.message),
             this.warnaSnackbar= "red",
             this.snackbar = true
           }else{
-            this.teksSnackbar= "Berhasil menambahkan data aset ",
+            this.teksSnackbar= response.data.message
             this.warnaSnackbar= "green",
             this.snackbar = true
             this.clearCreateItem()
@@ -2458,20 +1006,59 @@ L<template>
           this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(errors.response.data.errors),
           this.warnaSnackbar= "red",
           this.snackbar = true
-        }).finally(() => {
-          this.readDataFromAPI();
+        }).finally(async() => {
+          await this.readDataFromAPI();
           this.isLoading = false
           this.overlay_entri = false
-          this.overlay_list = false
+          this.overlay = false
         });
         // end of upload
       },
-      initMap(){
+      async submitUndoneVerification(item){
+        // console.log(this.inovation)
+        // start of upload
+        this.overlay = true
+        this.isLoading = "orange"
+        const config = {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            }
+        }
+        var formData = new FormData();
+        formData.append('id_inovation', item.id_inovation);
+        formData.append('id_keanggotaan', item.id_keanggotaan);
+        formData.append('status_verifikasi_inovation', false);
+
+        await axios.post("/api/verification-inovation", formData, config).then(response => {
+          // console.log(response.data)
+          if(response.data.status == false){
+            this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(response.data.message),
+            this.warnaSnackbar= "red",
+            this.snackbar = true
+          }else{
+            this.teksSnackbar= response.data.message
+            this.warnaSnackbar= "green"
+            this.snackbar = true
+          }
+        }).catch(errors => {
+          console.log(errors.response.data)
+          this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(errors.response.data.errors),
+          this.warnaSnackbar= "red",
+          this.snackbar = true
+        }).finally(async () => {
+          await this.readDataFromAPI();
+          this.isLoading = false
+          this.overlay_entri = false
+          this.overlay = false
+        });
+        // end of upload
+      },
+      async initMap(){
         var ref = this;
         var map
-        axios.get('/api/user').then(response => {
+        await axios.get('/api/user').then(response => {
+          this.user = response.data.user
           // console.log(response.data)
-          
           var osmUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                   osmAttrib = '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors',
                   osm = L.tileLayer(osmUrl, { maxZoom: 20, attribution: osmAttrib }),
@@ -2489,76 +1076,54 @@ L<template>
         });
       },
       clearCreateItem(){
-        this.pembinaan.id_entri=''
-        this.pembinaan.id_pembinaan=''
-        this.pembinaan.judul_pembinaan=''
-        this.pembinaan.teks_pembuka_pembinaan=''
-        this.pembinaan = {}
-        this.pembinaan.sampul_pembinaan=null
-        this.pembinaan.lampiran_pembinaan=null
-        this.pembinaan.tags_pembinaan=null
-        this.list_sesi = [
-          { name: "John", text: "", id: 0, waktu_awal_sesi:null, waktu_akhir_sesi: null, konten_sesi: null,},
-        ]
-
-        this.sesi = {
-          judul_sesi: [],
-          jenis_sesi: [],
-          sambutan_sesi: [],
-          moderator_sesi: [],
-          pemateri_sesi: [],
-          penampil_sesi: [],
-          tautan_sesi: [],
-          tugas_sesi: [],
-          konten_sesi: [],
-          lampiran_sesi: [],
-          // waktu_mulai_sesi: [],
-          // waktu_akhir_sesi: [],
-          able_tautan_sesi: [],
-          able_tugas_sesi: [],
-          able_lampiran_sesi: [],
-          able_materi_publik: [],
-          tanggal_awal_sesi: [],
-          waktu_awal_sesi: [],
-          tanggal_akhir_sesi: [],
-          waktu_akhir_sesi: [],
-          materi_sesi: [],
-        }
-        this.menu_tanggal_awal_sesi = []
-        this.menu_waktu_awal_sesi = []
+        this.inovation.id_entri=''
+        this.inovation.id_inovation=''
+        this.inovation.nama_inovation=''
+        this.inovation.teks_pembuka_inovation=''
+        this.inovation.teks_isi_inovation= ''
+        this.inovation.tanggal_inovation=''
+        this.inovation.geolocation_inovation=''
+        this.inovation.gambar_pembuka_inovation=null
+        this.inovation.lampiran_inovation=null
+        this.inovation.tags_inovation=null
         // this.$refs.observer.reset()
       },
-      clearViewItem(){
-        this.pembinaan = {};
-        this.list_sesi = [];
+      async clearViewItem(){
+        this.bukti_pembelian_aset_temps=[]
+        this.bukti_pembelian_aset_deleted=[]
+        this.bukti_pembukuan_aset_temps=[]
+        this.bukti_kepemilikan_aset_temps=[]
+        this.foto_aset_temps=[]
+        this.bukti_pembukuan_aset_deleted=[]
+        this.bukti_kepemilikan_aset_deleted=[]
+        this.foto_aset_deleted=[]
       },
       closeEditItem() {
-        this.dialogPembinaanEdit = false
+        this.dialogInovationEdit = false
         // this.clear()
       },
       closeViewItem() {
-        this.dialogPembinaanView = false
+        this.dialogInovationView = false
         this.clearViewItem()
       },
       closeCreateItem(){
-        this.dialogPembinaanCreate = false
-        // this.clearCreateItem()
+        this.dialogInovationCreate = false
+        this.clearCreateItem()
       },
     },
     //this will trigger in the onReady State
-    mounted() {
+    async mounted() {
       // console.log(this.$refs['mapID']);
+      this.overlay = true
       axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
-      this.readDataFromAPI();
+      await this.readDataFromAPI();
       // this.editor_read.isReadOnly = true;
-      // this.initMap();
-      // this.sesi.judul_sesi = Array(100)
-      // this.sesi.waktu_awal_sesi[0] = null
-      // this.sesi.waktu_akhir_sesi[0] = null
+      await this.initMap();
+      this.overlay = false
     },
-    created(){
+    async created(){
       axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
-      axios.get('/api/user-permission').then(response => {
+      await axios.get('/api/user-permission').then(response => {
           this.currentUser = response.data.user;
           this.$store.commit('updateRBAC', response.data.permissions)
           if(!(response.data.permissions).includes('articles.create')){
@@ -2569,10 +1134,6 @@ L<template>
       }).finally(() => {
           this.permissions = this.$store.getters.rbac
       })
-      
-      // this.editor_read.isReadOnly = true;
-      // console.log(this.$refs['mapID']);
-      // this.initMap();
     },
   }
 </script>

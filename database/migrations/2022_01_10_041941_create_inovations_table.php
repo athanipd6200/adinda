@@ -16,6 +16,7 @@ class CreateInovationsTable extends Migration
         Schema::create('inovations', function (Blueprint $table) {
             $table->id('id_entri');
             $table->string('id_inovation');
+            $table->string('id_keanggotaan');
             $table->string('nama_inovation');
             $table->string('ikon_inovation')->nullable();
             $table->mediumText('gambar_inovation')->nullable();
@@ -25,11 +26,12 @@ class CreateInovationsTable extends Migration
             $table->longText('konten_inovation')->nullable();
             $table->string('tautan_materi_inovation')->nullable();
             $table->string('tautan_kode_inovation')->nullable();
+            $table->boolean('status_tampilan_inovation')->nullable();
+            $table->boolean('status_verifikasi_inovation')->nullable();
             $table->string('created_by')->nullable(); //email
             $table->string('updated_by')->nullable(); //email
             $table->string('verified_by')->nullable(); //email
             $table->string('supervised_by')->nullable(); //email
-            $table->string('created_by_group')->nullable(); //id_grup
             $table->softDeletes();
             $table->timestamps();
         });

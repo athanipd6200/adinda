@@ -58,6 +58,7 @@ use App\Models\User;
 // });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    $user = [];
     try {
         //code...
         $user = $request->user();
@@ -298,7 +299,7 @@ Route::post('/logout', [App\Http\Controllers\Api\Auth\AuthController::class, 'lo
 
 // router untuk berita
 Route::post('/insert-artikel', [App\Http\Controllers\ArtikelController::class, 'store'])->middleware('auth:sanctum');
-Route::get('/get-artikels', [App\Http\Controllers\ArtikelController::class, 'show'])->middleware('auth:sanctum');
+Route::get('/get-artikels/{jenis?}', [App\Http\Controllers\ArtikelController::class, 'show'])->middleware('auth:sanctum');
 Route::get('/artikels', [App\Http\Controllers\ArtikelController::class, 'pagination']);
 Route::get('/ambil-artikel/{id_artikel?}/{jumlah_konten_artikel?}', [App\Http\Controllers\ArtikelController::class, 'index']);
 Route::post('/hapus-artikel', [App\Http\Controllers\ArtikelController::class, 'destroy'])->middleware('auth:sanctum');
@@ -352,7 +353,7 @@ Route::get('/check-infografis', [App\Http\Controllers\InfografisController::clas
 
 // router untuk inovation
 Route::post('/insert-inovation', [App\Http\Controllers\InovationController::class, 'store'])->middleware('auth:sanctum');
-Route::get('/get-inovations', [App\Http\Controllers\InovationController::class, 'show'])->middleware('auth:sanctum');
+Route::get('/get-inovations/{jenis?}', [App\Http\Controllers\InovationController::class, 'show'])->middleware('auth:sanctum');
 Route::get('/inovations', [App\Http\Controllers\InovationController::class, 'pagination']);
 Route::get('/ambil-inovation/{id_inovation?}/{jumlah_konten_inovation?}', [App\Http\Controllers\InovationController::class, 'index']);
 Route::post('/delete-inovation', [App\Http\Controllers\InovationController::class, 'destroy'])->middleware('auth:sanctum');

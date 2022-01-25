@@ -22,12 +22,12 @@ export default new Vuetify({
     theme: {
         themes: {
             light: {
-                primary: '#D8C4EA',
-                secondary: '#FDE395',
-                tertiary: '#ABDAF8',
-                quartiary: '#2F2F2F',
-                accent: '#F4EEA9',
-                base: '#FBFFE2',
+                primary: '#AC4325',
+                secondary: '#A96C75',
+                tertiary: '#D38F35',
+                quartiary: '#E6B85E',
+                accent: '#F1EEE9',
+                base: '#FFEDA8',
                 error: '#C2185B',
               },
               dark: {

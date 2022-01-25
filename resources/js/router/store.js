@@ -10,7 +10,7 @@ axios.defaults.baseURL = 'http://localhost'
 
 export default new Vuex.Store({
   state: {
-    user: null,
+    user: localStorage.getItem('user') || '',
     url_base: 'http://localhost',
     // url_base: 'https://sida.gaweyan.com',
     token: localStorage.getItem('token') || '',
@@ -19,7 +19,7 @@ export default new Vuex.Store({
 
   mutations: {
     setUserData (state, userData) {
-      console.log(userData)
+      // console.log(userData)
       localStorage.setItem('token', userData.token)
       state.token = userData.token
       axios.defaults.headers.common.Authorization = `Bearer ${userData.token}`

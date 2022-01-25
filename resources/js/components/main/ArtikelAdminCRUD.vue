@@ -673,6 +673,10 @@ L<template>
       <template v-slot:item.created_at="{ item }">
         {{new Date(item.created_at).toUTCString() }}
       </template>
+      <template v-slot:item.status_verifikasi_artikel="{ item }">
+        <v-chip v-if="item.status_verifikasi_artikel === 1" color="blue" small dark>Terverifikasi</v-chip>
+        <v-chip v-else color="orange darken-2" small dark>Belum Terverifikasi</v-chip>
+      </template>
       <template v-slot:no-data>
         TIDAK ADA ARTIKEL
       </template>
@@ -871,6 +875,7 @@ L<template>
           },
           { text: 'Jenis Artikel', value: 'jenis_artikel' },
           { text: 'Penulis Artikel', value: 'penulis_artikel' },
+          { text: 'Status Verifikasi', value: 'status_verifikasi_artikel'},
           { text: 'Tanggal Pembuatan', value: 'created_at' },
           { text: 'Actions', value: 'actions', sortable: false },
         ],
@@ -1053,6 +1058,7 @@ L<template>
         var $teks = "";
         formData.append('id_artikel', this.news.id_artikel);
         formData.append('id_entri', this.news.id_entri);
+        formData.append('id_keanggotaan', this.news.id_keanggotaan);
         console.log(formData);
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
         await axios.post("/api/hapus-artikel", formData, config).then(response => {

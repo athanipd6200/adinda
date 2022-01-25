@@ -24,16 +24,16 @@ class ArtikelController extends Controller
     {
         //
         if($id_artikel == null){
-            $artikels = Artikel::select('id_artikel', 'created_by', 'edited_by', 'penyunting_artikel','teks_pembuka_artikel', 'gambar_pembuka_artikel', 'penulis_artikel', 'tanggal_artikel', 'jenis_artikel', 'tags_artikel', 'judul_artikel')->where('status_tampilan_artikel', true)->where('status_verifikasi_artikel', true)->orderBy('created_at', 'desc')->limit(6)->get();
+            $artikels = Artikel::select('id_artikel', 'created_by', 'updated_by', 'penyunting_artikel','teks_pembuka_artikel', 'gambar_pembuka_artikel', 'penulis_artikel', 'tanggal_artikel', 'jenis_artikel', 'tags_artikel', 'judul_artikel')->where('status_tampilan_artikel', true)->where('status_verifikasi_artikel', true)->orderBy('created_at', 'desc')->limit(6)->get();
             return response($artikels, 200);
         }elseif(is_numeric($id_artikel)){
             error_log($id_artikel);
-            $artikels = Artikel::select('id_artikel', 'created_by', 'edited_by', 'penyunting_artikel','teks_pembuka_artikel', 'gambar_pembuka_artikel', 'penulis_artikel', 'tanggal_artikel', 'jenis_artikel', 'tags_artikel', 'judul_artikel')->where('status_tampilan_artikel', true)->where('status_verifikasi_artikel', true)->orderBy('created_at', 'desc')->limit($id_artikel)->get();
+            $artikels = Artikel::select('id_artikel', 'created_by', 'updated_by', 'penyunting_artikel','teks_pembuka_artikel', 'gambar_pembuka_artikel', 'penulis_artikel', 'tanggal_artikel', 'jenis_artikel', 'tags_artikel', 'judul_artikel')->where('status_tampilan_artikel', true)->where('status_verifikasi_artikel', true)->orderBy('created_at', 'desc')->limit($id_artikel)->get();
             return response($artikels, 200);
         }elseif($jumlah_konten_artikel != null && $id_artikel != null){
             error_log($id_artikel);
             $artikel = Artikel::where('id_artikel', $id_artikel)->orWhere('jenis_artikel', $id_artikel)->first();
-            $artikels = Artikel::select('id_artikel', 'created_by', 'edited_by', 'penyunting_artikel', 'teks_pembuka_artikel', 'gambar_pembuka_artikel', 'penulis_artikel', 'tanggal_artikel', 'jenis_artikel', 'tags_artikel', 'judul_artikel')->where('status_tampilan_artikel', true)->where('status_verifikasi_artikel', true)->inRandomOrder()->limit($jumlah_konten_artikel)->get();
+            $artikels = Artikel::select('id_artikel', 'created_by', 'updated_by', 'penyunting_artikel', 'teks_pembuka_artikel', 'gambar_pembuka_artikel', 'penulis_artikel', 'tanggal_artikel', 'jenis_artikel', 'tags_artikel', 'judul_artikel')->where('status_tampilan_artikel', true)->where('status_verifikasi_artikel', true)->inRandomOrder()->limit($jumlah_konten_artikel)->get();
             return response(['artikel' => $artikel, 'artikels' => $artikels], 200);
         }else{
             error_log($id_artikel);
@@ -60,15 +60,26 @@ class ArtikelController extends Controller
     public function verification(Request $request)
     {
         //
-        if($request->user()->hasRole('SuperAdmin')){
+        $id_artikel = $request->id_artikel;
+        $id_keanggotaan = $request->id_keanggotaan;
+        $supervisor = in_array($id_keanggotaan, $request->user()->keanggotaan_by_roles(['SupervisorOrganisasi', 'SupervisorDivisi', 'SupervisorTim']));
+        if($request->user()->hasRole('SuperAdmin') || $supervisor){
             try{
                 $id_artikel = $request->id_artikel;
-
-                $data = [
-                    'status_verifikasi_artikel' => ($request->status_verifikasi_artikel === 'true'),
-                    'verificated_by' => $request->user()->email,
-                    'updated_at' => Carbon::now(),
-                ];
+                $status = ($request->status_verifikasi_artikel === 'true');
+                if($status){
+                    $data = [
+                        'status_verifikasi_artikel' => $status,
+                        'verificated_by' => $request->user()->email,
+                        'updated_at' => Carbon::now(),
+                    ];
+                }else{
+                    $data = [
+                        'status_verifikasi_artikel' => $status,
+                        'verificated_by' => null,
+                        'updated_at' => Carbon::now(),
+                    ];
+                }
                 Artikel::where('id_artikel', $id_artikel)->update($data);
             }catch (Exception $e) {
                 return response()->json(['msg' => $e->getMessage()]);
@@ -100,7 +111,9 @@ class ArtikelController extends Controller
     {
         //
         $data_foto = [];
-        if($request->user()->hasRole('SuperAdmin')){
+        $id_keanggotaan = $request->id_keanggotaan;
+        $penulis = in_array($id_keanggotaan, $request->user()->keanggotaan_by_roles(['PenulisArtikelOrganisasi', 'PenulisArtikelDivisi', 'PenulisArtikelTim']));
+        if($request->user()->hasRole('SuperAdmin') || $penulis){
             $request->validate([
                 'judul_artikel' => ['required', 'string'],
                 'id_keanggotaan' => ['required', 'string'],
@@ -110,7 +123,6 @@ class ArtikelController extends Controller
                 $data_lampiran_artikel = [];
                 $lampiran_artikel_filename = json_decode($request->lampiran_artikel_filename);
                 $id_artikel = Uuid::uuid4()->toString();
-                $id_keanggotaan = $request->id_keanggotaan;
                 // $tags = explode(",",$request->tags_artikel);
                 // $tags = $request->tags_artikel;
                 $tags = json_decode($request->tags_artikel);
@@ -166,11 +178,24 @@ class ArtikelController extends Controller
      * @param  \App\Models\Artikel  $artikel
      * @return \Illuminate\Http\Response
      */
-    public function show(Artikel $artikel)
+    public function show(Request $request, String $jenis = null,Artikel $artikel = null)
     {
         //
-        $artikels = Artikel::orderBy('created_at', 'desc')->get();
-        return response($artikels, 200);
+        if($request->user()->hasRole('SuperAdmin')){
+            $artikels = Artikel::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'artikels.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'artikels.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'artikels.id_keanggotaan')->orderBy('artikels.created_at', 'desc')->get();
+            return response($artikels, 200);
+        }elseif($jenis == 'supervisor'){
+            $id_kegiatans = $request->user()->keanggotaan_by_roles(['SupervisorOrganisasi', 'SupervisorDivisi', 'SupervisorTim']);
+            $artikels = Artikel::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'artikels.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'artikels.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'artikels.id_keanggotaan')->whereIn('id_keanggotaan', $id_kegiatans)->orderBy('artikels.created_at', 'desc')->get();
+            return response($artikels, 200);
+        }elseif($jenis == 'penyunting'){
+            $id_kegiatans = $request->user()->keanggotaan_by_roles(['PenyuntingArtikelOrganisasi', 'PenyuntingArtikelDivisi', 'PenyuntingArtikelTim']);
+            $artikels = Artikel::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'artikels.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'artikels.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'artikels.id_keanggotaan')->whereIn('id_keanggotaan', $id_kegiatans)->orderBy('artikels.created_at', 'desc')->get();
+            return response($artikels, 200);
+        }else{
+            $artikels = Artikel::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'artikels.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'artikels.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'artikels.id_keanggotaan')->where('artikels.created_by', $request->user()->email)->orderBy('artikels.created_at', 'desc')->get();
+            return response($artikels, 200);
+        }
     }
 
     /**
@@ -194,18 +219,18 @@ class ArtikelController extends Controller
     public function update(Request $request, Artikel $artikel)
     {
         //
-        if($request->user()->hasRole('SuperAdmin')){
+        $id_artikel = $request->id_artikel;
+        $id_keanggotaan = $request->id_keanggotaan;
+        $supervisor = in_array($id_keanggotaan, $request->user()->keanggotaan_by_roles(['SupervisorOrganisasi', 'SupervisorDivisi', 'SupervisorTim']));
+        if($request->user()->hasRole('SuperAdmin') || $supervisor || ($request->user()->email == $request->created_by)){
             $request->validate([
                 'judul_artikel' => ['required', 'string'],
                 'teks_isi_artikel' => ['required'],
-                // 'kelurahan_aset' => ['required', 'string'],
-                // 'kecamatan_aset' => ['required', 'string'],
-                // 'foto_aset.*'=> 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                'id_artikel' => ['required', 'string'],
+                'id_keanggotaan' => ['required', 'string'],
             ]);
             $gambar_pembuka_artikel_nama = '';
             try{
-                $id_artikel = $request->id_artikel;
-
                 // $gambar_pembuka_artikel = $request->file('gambar_pembuka_artikel_new');
                 if($request->hasfile('gambar_pembuka_artikel_new')){
                     $file = $request->file('gambar_pembuka_artikel_new');
@@ -233,7 +258,7 @@ class ArtikelController extends Controller
                 $lampiran_artikel = array_merge($lampiran_artikel_temps, $data_lampiran_artikel_new);
 
                 $data_artikel = [
-                    'id_keanggotaan' => $request->id_keanggotaan , 
+                    'id_keanggotaan' => $id_keanggotaan , 
                     'jenis_artikel' => $request->jenis_artikel , 
                     'judul_artikel' => $request->judul_artikel ,
                     'teks_pembuka_artikel' => $request->teks_pembuka_artikel,
@@ -269,8 +294,10 @@ class ArtikelController extends Controller
     public function destroy(Request $request)
     {
         //
-        if($request->user()->hasRole('SuperAdmin')){
-            $id_artikel = $request->id_artikel;
+        $id_artikel = $request->id_artikel;
+        $id_keanggotaan = $request->id_keanggotaan;
+        $supervisor = in_array($id_keanggotaan, $request->user()->keanggotaan_by_roles(['SupervisorOrganisasi', 'SupervisorDivisi', 'SupervisorTim']));
+        if($request->user()->hasRole('SuperAdmin') || $supervisor || ($request->user()->email == $request->created_by)){
             $id_entri = $request->id_entri;
             error_log($request->id_artikel);
             error_log($request->id_entri);
