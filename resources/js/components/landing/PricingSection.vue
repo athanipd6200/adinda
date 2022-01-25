@@ -25,7 +25,7 @@
                           transition="fade-transition"
                           eager
                         >
-                        <h1 class="mt-5 ml-5 base--text" style="text-shadow: 1px 1px 2px purple;">{{ item.title }}</h1>
+                        <h1 class="mt-5 ml-5 base--text" style="text-shadow: 1px 1px 2px rgb(156, 61, 6);">{{ item.title }}</h1>
                         <div class="ml-5 base--text image-description" style="margin-top:15px">{{ item.link }}</div>
                         <div class="ml-5 base--text image-description" style="margin-top:20px">{{ item.description }}</div>
                       </v-carousel-item>

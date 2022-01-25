@@ -367,6 +367,8 @@
 </script>
 <style scoped>
   #infografis{
+    background: url('/other/moroccan.png') !important;
+    background-size: cover;
     background-color: rgba(216, 177, 47, 0.4);
   }
 

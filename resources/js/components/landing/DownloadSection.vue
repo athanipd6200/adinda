@@ -12,7 +12,7 @@
               <h1 class="font-weight-light">
                 Knowledge Management (Manajemen Pengetahuan) yang mengumpulkan berbagai sumber informasi dari segala aspek yang mendukug pelaksanaan organisasi, pengembangan diri, serta pelayanan publik yang ciamik!
               </h1>
-              <v-btn rounded outlined to="/list-artikel" target="_blank" large color="white" class="mt-4">
+              <v-btn rounded outlined to="/list-artikel" target="_blank" large color="white" class="my-4">
                 <v-icon class="mr-2">
                   mdi-book-open-variant
                 </v-icon>

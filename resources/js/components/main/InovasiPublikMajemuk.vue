@@ -433,6 +433,8 @@
 </script>
 <style scoped>
   #inovation{
+    background: url('/other/sayagata.png') !important;
+    background-size: cover;
     background-color: rgba(216, 177, 47, 0.4);
   }
   >>>.legend {

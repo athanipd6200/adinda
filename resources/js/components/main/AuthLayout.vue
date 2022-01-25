@@ -64,7 +64,7 @@
                         </v-list-item-content>
                     </v-list-item>
 
-                    <v-list-item style="margin-left:25px;" link to="/list-inovation-crud" v-if="permissions.includes('inovations.create')">
+                    <v-list-item style="margin-left:25px;" link to="/list-inovation-crud" v-if="permissions.includes('inovations.create') || roles.some(r => ['PenulisInovasiOrganisasi','PenulisInovasiDivisi','PenulisInovasiTim'].includes(r))">
                         <v-list-item-action>
                             <v-icon>mdi-cog-transfer-outline</v-icon>
                         </v-list-item-action>
@@ -73,7 +73,7 @@
                         </v-list-item-content>
                     </v-list-item>
 
-                    <v-list-item style="margin-left:25px;" link to="/list-inovation-verifikator" v-if="permissions.includes('inovations.verification')">
+                    <v-list-item style="margin-left:25px;" link to="/list-inovation-verifikator" v-if="permissions.includes('inovations.verification') || roles.some(r => ['SupervisorOrganisasi','SupervisorDivisi','SupervisorTim'].includes(r))">
                         <v-list-item-action>
                             <v-icon>mdi-check-decagram</v-icon>
                         </v-list-item-action>
@@ -101,7 +101,7 @@
                             <v-list-item-title>Halaman Artikel</v-list-item-title>
                         </v-list-item-content>
                     </v-list-item>
-                    <v-list-item style="margin-left:25px;" link to="/list-news" v-if="permissions.includes('articles.create')">
+                    <v-list-item style="margin-left:25px;" link to="/list-news" v-if="permissions.includes('articles.create') || roles.some(r => ['PenulisArtikelOrganisasi','PenulisArtikelDivisi','PenulisArtikelTim'].includes(r))">
                         <v-list-item-action>
                             <v-icon>mdi-cog-transfer-outline</v-icon>
                         </v-list-item-action>
@@ -109,7 +109,7 @@
                             <v-list-item-title>Pengaturan Artikel</v-list-item-title>
                         </v-list-item-content>
                     </v-list-item>
-                    <v-list-item style="margin-left:25px;" link to="/list-news-verifikator" v-if="permissions.includes('articles.create')">
+                    <v-list-item style="margin-left:25px;" link to="/list-news-verifikator" v-if="permissions.includes('articles.verification') || roles.some(r => ['SupervisorOrganisasi','SupervisorDivisi','SupervisorTim'].includes(r))">
                         <v-list-item-action>
                             <v-icon>mdi-check-decagram</v-icon>
                         </v-list-item-action>
@@ -148,7 +148,7 @@
                 </v-list-group>
 
                 <v-divider></v-divider>
-                <v-list-item link to="/manajemen-user" v-if="permissions.includes('users.create')">
+                <v-list-item link to="/manajemen-user" v-if="permissions.includes('users.create') || roles.some(r => ['AdminOrganisasi','AdminDivisi','AdminTim'].includes(r))">
                     <v-list-item-action>
                         <v-icon>mdi-account-group</v-icon>
                     </v-list-item-action>
@@ -156,7 +156,7 @@
                         <v-list-item-title>Manajemen User</v-list-item-title>
                     </v-list-item-content>
                 </v-list-item>
-                <v-list-item link to="/manajemen-organisasi" v-if="roles.includes('SuperAdmin') || permissions.includes('users.update')">
+                <v-list-item link to="/manajemen-organisasi" v-if="permissions.includes('users.update') || roles.some(r => ['SuperAdmin', 'AdminOrganisasi','AdminDivisi','AdminTim'].includes(r))">
                     <v-list-item-action>
                         <v-icon>mdi-domain</v-icon>
                     </v-list-item-action>

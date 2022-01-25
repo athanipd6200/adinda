@@ -107,33 +107,41 @@ class User extends Authenticatable
         $id = $this->attributes['id'];
         $list_keanggotaan = [];
         $data = [];
-        if($this->hasRole('SuperAdmin')){
+        if($this->hasRole('SuperAdmin') && $detail == false){
             $list_keanggotaan = $data = Keanggotaan::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'keanggotaans.id_keanggotaan')->get();
+            return $list_keanggotaan;
+            
         }else{
-            if($detail == false){
-                if($role == 'all'){
-                    $data = Keanggotaan::select('id_keanggotaan')->where(['id_user' => $id])->get();
-                }else{
-                    $roles = explode('&',$role);
-                    $data = Keanggotaan::select('id_keanggotaan')->where('id_user', $id)->whereIn('role_keanggotaan', $roles)->get();
-                }
-                foreach($data as $key => $value){
-                    array_push($list_keanggotaan, $value['id_keanggotaan']);
-                }
-                $list_keanggotaan = array_unique($list_keanggotaan);
-            }else{
-                if($role == 'all'){
-                    $data = Keanggotaan::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'keanggotaans.id_keanggotaan')->where(['id_user' => $id])->get();
-                    // $data = Keanggotaan::all();
-                }else{
-                    $roles = explode('&',$role);
-                    $data = Keanggotaan::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'keanggotaans.id_keanggotaan')->where('id_user', $id)->whereIn('role_keanggotaan', $roles)->get();
-                }
-                // foreach($data as $key => $value){
-                //     array_push($list_keanggotaan, $value['id_keanggotaan']);
-                // }
-                $list_keanggotaan = $data;
+            $data = $data = Keanggotaan::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'keanggotaans.id_keanggotaan')->get();
+            foreach($data as $key => $value){
+                array_push($list_keanggotaan, $value['id_keanggotaan']);
             }
+            return $list_keanggotaan;
+        }
+        
+        if($detail == false){
+            if($role == 'all'){
+                $data = Keanggotaan::select('id_keanggotaan')->where(['id_user' => $id])->get();
+            }else{
+                $roles = explode('&',$role);
+                $data = Keanggotaan::select('id_keanggotaan')->where('id_user', $id)->whereIn('role_keanggotaan', $roles)->get();
+            }
+            foreach($data as $key => $value){
+                array_push($list_keanggotaan, $value['id_keanggotaan']);
+            }
+            // $list_keanggotaan = array_unique($list_keanggotaan);
+        }else{
+            if($role == 'all'){
+                $data = Keanggotaan::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'keanggotaans.id_keanggotaan')->where(['id_user' => $id])->get();
+                // $data = Keanggotaan::all();
+            }else{
+                $roles = explode('&',$role);
+                $data = Keanggotaan::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'keanggotaans.id_keanggotaan')->where('id_user', $id)->whereIn('role_keanggotaan', $roles)->get();
+            }
+            // foreach($data as $key => $value){
+            //     array_push($list_keanggotaan, $value['id_keanggotaan']);
+            // }
+            $list_keanggotaan = $data;
         }
         return $list_keanggotaan;
     }
@@ -163,4 +171,5 @@ class User extends Authenticatable
         }
         return $list_keanggotaan;
     }
+
 }

@@ -11,7 +11,7 @@
     </v-overlay>
     <v-layout column>
         <v-card class="mx-auto" tile>
-          <v-img height="200" width="80vw" src="./other/account-pattern.png">
+          <v-img height="200" min-width="80vw" src="./other/account-pattern.png">
             <v-row style="margin:2.5%;position:absolute;">
               <v-list-item>
                <v-list-item-avatar size="100">

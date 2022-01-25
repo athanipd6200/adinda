@@ -130,7 +130,7 @@ class TimController extends Controller
     {
         //
         $status_keanggotaan_organisasi = in_array($request->id_organisasi, $request->user()->keanggotaan_by_role('AdminOrganisasi'));
-        $status_keanggotaan_tim = in_array($request->id_tim, $request->user()->keanggotaan_by_role('AdminTim'));
+        $status_keanggotaan_tim = in_array($request->id_tim, $request->user()->keanggotaan_by_roles('AdminTim'));
         $status_keanggotaan_divisi = $request->id_divisi == null ? false : in_array($request->id_divisi, $request->user()->keanggotaan_by_role('AdminDivisi'));
         if(($status_keanggotaan_tim) || ($status_keanggotaan_organisasi) || ($status_keanggotaan_divisi) || ($request->user()->hasRole(['SuperAdmin']))){
             error_log('otw validasi');

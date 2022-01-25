@@ -58,19 +58,19 @@
         @click.stop="drawer = !drawer"
         class="mr-4"
         v-if="isXs"
-        style="color:rgb(25, 84, 88);"
+        style="color:rgb(247, 208, 199);"
       />
       <div v-else>
-        <v-btn style="color:rgb(25, 84, 88);" text @click="$vuetify.goTo('#hero')">
+        <v-btn style="color:rgb(247, 208, 199);" text @click="$vuetify.goTo('#hero')">
           <span class="mr-2">Home</span>
         </v-btn>
-        <v-btn style="color:rgb(25, 84, 88);" text @click="$vuetify.goTo('#features')">
+        <v-btn style="color:rgb(247, 208, 199);" text @click="$vuetify.goTo('#features')">
           <span class="mr-2">Inovasi</span>
         </v-btn>
-        <v-btn style="color:rgb(25, 84, 88);" text @click="$vuetify.goTo('#download')">
+        <v-btn style="color:rgb(247, 208, 199);" text @click="$vuetify.goTo('#download')">
           <span class="mr-2">Artikel</span>
         </v-btn>
-        <v-btn style="color:rgb(25, 84, 88);" text @click="$vuetify.goTo('#pricing')">
+        <v-btn style="color:rgb(247, 208, 199);" text @click="$vuetify.goTo('#pricing')">
           <span class="mr-2">Infografis</span>
         </v-btn>
         <!-- <v-btn rounded outlined text @click="$vuetify.goTo('#contact')">
@@ -99,9 +99,9 @@ export default {
     isXs: false,
     items: [
       ["mdi-home-outline", "Home", "#hero"],
-      ["mdi-information-outline", "Sobre", "#features"],
-      ["mdi-download-box-outline", "Download", "#download"],
-      ["mdi-currency-usd", "Preços", "#pricing"],
+      ["mdi-lightbulb-outline", "Inovasi", "#features"],
+      ["mdi-newspaper-variant-outline", "Artikel", "#download"],
+      ["mdi-image-outline", "Infografis", "#pricing"],
       // ["mdi-email-outline", "Contatos", "#contact"],
     ],
   }),

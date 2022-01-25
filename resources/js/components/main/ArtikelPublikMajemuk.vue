@@ -174,7 +174,8 @@
             <div id="news" style="margin-top:10px;min-height:60vh;margin-right:10px;margin-left:10px;">
               <section class="news">
                 <article v-for="datum in this.artikels" :key="datum.id_artikel" data-aos="fade-up" data-aos-delay="500" style="border-radius: 10px;">
-                  <v-img class="img" :src="url_base+'/api/gambar_pembuka_artikel/'+datum.gambar_pembuka_artikel" alt="">
+                    <p class="articles__article-card__top__article-cat letter-spacing" style="text-transform:uppercase;">{{datum.jenis_artikel}}</p>
+                  <v-img lazy-src="https://picsum.photos/id/11/10/6" :src="url_base+'/api/gambar_pembuka_artikel/'+datum.gambar_pembuka_artikel" alt="">
                     <p class="articles__article-card__top__article-cat letter-spacing" style="text-transform:uppercase;">{{datum.jenis_artikel}}</p>
                   </v-img>
                   
@@ -430,6 +431,8 @@
 </script>
 <style scoped>
   #artikel{
+    background: url('/other/asanoha.png') !important;
+    background-size: cover;
     background-color: rgba(216, 177, 47, 0.4);
   }
 

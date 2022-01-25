@@ -75,11 +75,16 @@ Route::middleware('auth:sanctum')->get('/user-permission', function (Request $re
     $roles_temp = $request->user()->getRoleNames();
     $permissions = [];
     $roles = [];
+    $data_temp = Keanggotaan::select('role_keanggotaan')->where(['id_user' => $user->id])->get();
+
     foreach ($permissions_temp as $key => $value) {
         $permissions[] = $value->name;
     };
     foreach ($roles_temp as $key => $value) {
         $roles[] = $value;
+    };
+    foreach ($data_temp as $key => $value) {
+        $roles[] = $value['role_keanggotaan'];
     };
     return response()->json(['status' => true, 'user' => $user, 'permissions' => $permissions, 'roles' => $roles]);
 });
@@ -216,7 +221,7 @@ Route::get('gambar_pembuka_artikel/{filename}', function ($filename)
     $path = $public_path . '/gambar_pembuka_artikel/' . $filename;
 
     if (!File::exists($path)) {
-        $path = $public_path . '/gambar_pembuka_artikel/error.jpg';
+        $path = $public_path . '/gambar_pembuka_artikel/error.png';
         // abort(404);
     }
 

@@ -5,8 +5,8 @@
         <v-col cols="10">
           <v-row align="center" justify="center">
             <v-col cols="12" md="6" xl="8">
-              <h1 style="color:rgb(25, 84, 88);" class="display-2 font-weight-bold mb-4">ADINDA</h1>
-              <h1 style="color:rgb(25, 84, 88);" class="font-weight-light">
+              <h1 style="color:rgb(206, 186, 120);" class="display-2 font-weight-bold mb-4">ADINDA</h1>
+              <h1 style="color:rgb(216, 206, 173);" class="font-weight-light">
                 Aplikasi Dokumentasi Inovasi dan Artikel <br />
                 Mari cari inovasi dan artikel yang sudah terdokumentasi <br />
                 Yuk bergabung dengan kami!
@@ -18,12 +18,12 @@
                 dark
                 @click="$vuetify.goTo('#features')"
                 class="mt-5"
-                style="color:rgb(25, 84, 88);"
+                style="color:rgb(206, 186, 120);"
               >
                 Yuk Berkeliling
-                <v-icon style="color:rgb(25, 84, 88);" class="ml-2">mdi-arrow-down</v-icon>
+                <v-icon style="color:rgb(206, 186, 120);" class="ml-2">mdi-arrow-down</v-icon>
               </v-btn>
-              <div style="color:rgb(25, 84, 88);" class="video d-flex align-center py-4">
+              <div style="color:rgb(206, 186, 120);" class="video d-flex align-center py-4">
                 <a @click.stop="dialog = true" class="playBut">
                   <svg
                     version="1.1"
@@ -61,7 +61,7 @@
                       cx="106.8"
                       cy="106.8"
                       r="103.3"
-                      style="color:rgb(25, 84, 88);"
+                      style="color:rgb(206, 186, 120);"
                     />
                   </svg>
                 </a>
@@ -76,7 +76,7 @@
         <v-img src="/assets/img/borderWaves.svg" />
       </div>
     </v-parallax>
-    <v-container fluid id="features" class="mt-2">
+    <v-container fluid id="features" class="mt-2" style="min-height:500px;">
       <v-row align="center" justify="center">
         <v-col cols="10">
           <div v-if="features.length > 0">
@@ -239,7 +239,7 @@ export default {
 
 <style lang="scss">
 .circle {
-  stroke: rgb(6, 85, 32);
+  stroke: rgb(206, 186, 120);
   stroke-dasharray: 650;
   stroke-dashoffset: 650;
   -webkit-transition: all 0.5s ease-in-out;
@@ -255,7 +255,7 @@ export default {
     -webkit-transition: all 0.7s ease-in-out;
     stroke-dasharray: 240;
     stroke-dashoffset: 480;
-    stroke: rgb(6, 85, 32);
+    stroke: rgb(206, 186, 120);
     transform: translateY(0);
   }
 
@@ -263,7 +263,7 @@ export default {
     .triangle {
       stroke-dashoffset: 0;
       opacity: 1;
-      stroke: rgb(6, 85, 32);
+      stroke: rgb(206, 186, 120);
       animation: nudge 0.7s ease-in-out;
 
       @keyframes nudge {
