@@ -1126,13 +1126,15 @@ L<template>
       await axios.get('/api/user-permission').then(response => {
           this.currentUser = response.data.user;
           this.$store.commit('updateRBAC', response.data.permissions)
-          if(!(response.data.permissions).includes('articles.create')){
+          this.$store.commit('updateRoles', response.data.roles)
+          this.$store.commit('updatePermissions', response.data.permissions)
+          if(!response.data.roles.some(r => ['SuperAdmin', 'SupervisorOrganisasi','SupervisorDivisi','SupervisorTim'].includes(r))){
             this.$router.push('/')
           }
       }).catch(errors => {
           console.log(errors);
       }).finally(() => {
-          this.permissions = this.$store.getters.rbac
+          this.permissions = this.$store.getters.permissions
       })
     },
   }

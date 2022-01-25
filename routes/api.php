@@ -75,7 +75,7 @@ Route::middleware('auth:sanctum')->get('/user-permission', function (Request $re
     $roles_temp = $request->user()->getRoleNames();
     $permissions = [];
     $roles = [];
-    $data_temp = Keanggotaan::select('role_keanggotaan')->where(['id_user' => $user->id])->get();
+    $data_temp = Keanggotaan::select('role_keanggotaan')->where('id_user', $user->id)->get();
 
     foreach ($permissions_temp as $key => $value) {
         $permissions[] = $value->name;

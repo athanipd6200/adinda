@@ -398,11 +398,11 @@
           this.clearForm();
           this.dialogCreate = true;
         },
-        init(){
+        async init(){
           var data = []
           this.overlay = true;
           axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
-          axios.get('/api/user-permission')
+          await axios.get('/api/user-permission')
           .then((response) => {
             //Then injecting the result to datatable parameters.
 
@@ -421,14 +421,15 @@
             // // console.log(errors.response.data)
             // this.warnaSnackbar= "red"
             // this.snackbar = true
+            console.log(errors)
           }).finally(() => {
             this.overlay = false
-          });      
+          });
             this.overlay = false
         },
-        initData(){
+        async initData(){
           axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
-          axios.get('/api/show-infografis')
+          await axios.get('/api/show-infografis')
             .then((response) => {
               if(response.data.status == true){
                 // console.log(response.data);
@@ -441,7 +442,7 @@
               }
               
             }).catch(errors => {
-              this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(errors.response.data.message)
+              this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(errors)
               this.warnaSnackbar= "red"
               this.snackbar = true
             }).finally(() => {
@@ -456,7 +457,7 @@
           this.infografis = item
           this.dialogKonfirmasiHapus = true
         },
-        deleteItem(){
+        async deleteItem(){
           // start of upload
           this.overlay = true
           const config = {
@@ -472,7 +473,7 @@
           formData.append('name', this.infografis.name);
           formData.append('description', this.infografis.description);
           formData.append('source', this.infografis.source);
-          axios.post("/api/delete-infografis", formData, config).then(response => {
+          await axios.post("/api/delete-infografis", formData, config).then(response => {
             console.log(response.data)
             if(response.data.status == false){
               this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(response.data.message),
@@ -488,9 +489,9 @@
             this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(errors.response),
             this.warnaSnackbar= "red",
             this.snackbar = true
-          }).finally(() => {
+          }).finally(async() => {
             this.dialogKonfirmasiHapus = false
-            this.initData();
+            await this.initData();
             this.overlay = false
           });
           this.clear_infografis()
@@ -501,7 +502,7 @@
           this.viewGambarNama = item.name
           this.viewGambarLink = this.url_base+'/api/infografis/'+item.source
         },
-        submitItem(){
+        async submitItem(){
           // console.log('submit')
            // start of upload
           this.overlay = true
@@ -529,7 +530,7 @@
           formData.append('tautan_infografis', this.infografis.tautan_infografis);
           formData.append('tags_infografis', JSON.stringify(this.tags_select));
           formData.append('tampilan_web', this.infografis.tampilan_web);
-          axios.post("/api/insert-infografis", formData, config).then(response => {
+          await axios.post("/api/insert-infografis", formData, config).then(response => {
             // console.log(response.data)
             if(response.data.status == false){
               this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(response.data.message),
@@ -545,9 +546,9 @@
             this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(errors.response.data.errors),
             this.warnaSnackbar= "red",
             this.snackbar = true
-          }).finally(() => {
+          }).finally(async () => {
             this.dialogCreate = false
-            this.initData();
+            await this.initData();
             this.overlay = false
           });
           this.overlay = false
@@ -571,7 +572,7 @@
             });
           });
         },
-        confirmInfografis(){
+        async confirmInfografis(){
           console.log(this.infografis_selected);
           // start of upload
           this.overlay = true
@@ -585,7 +586,7 @@
 
           // additional data
           formData.append('selected', JSON.stringify(this.infografis_selected));
-          axios.post("/api/update-tampilan-infografis", formData, config).then(response => {
+          await axios.post("/api/update-tampilan-infografis", formData, config).then(response => {
             // console.log(response.data)
             if(response.data.status == false){
               this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(response.data.message),
@@ -604,8 +605,8 @@
             this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(errors.response.data.errors),
             this.warnaSnackbar= "red",
             this.snackbar = true
-          }).finally(() => {
-            this.initData();
+          }).finally(async () => {
+            await this.initData();
             this.overlay = false
           });
           this.clear_infografis()
@@ -622,7 +623,7 @@
           this.infografis.source = null
           this.dialogEdit = true
         },
-        submitEdit(){
+        async submitEdit(){
           this.overlay = true
           const config = {
               headers: {
@@ -650,7 +651,7 @@
           formData.append('tags_infografis', JSON.stringify(this.tags_select_edit));
           formData.append('tampilan_web', this.infografis_edit.tampilan_web);
           formData.append('source_old', this.infografis_edit.source);
-          axios.post("/api/update-infografis", formData, config).then(response => {
+          await axios.post("/api/update-infografis", formData, config).then(response => {
             // console.log(response.data)
             if(response.data.status == false){
               this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(response.data.message),
@@ -662,13 +663,13 @@
               this.snackbar = true
             }
           }).catch(errors => {
-            console.log(errors.response.data)
-            this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(errors.response.data.errors),
+            console.log(errors)
+            this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(errors),
             this.warnaSnackbar= "red",
             this.snackbar = true
-          }).finally(() => {
+          }).finally(async() => {
             this.dialogCreate = false
-            this.initData();
+            await this.initData();
             this.overlay = false
           });
           this.overlay = false
@@ -699,12 +700,12 @@
           return URL.createObjectURL(this.infografis.source);
       },
       },
-      mounted () {
-        this.initData();
+      async mounted () {
+        await this.initData();
       },
-      created () {
+      async created () {
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
-        this.init();
+        await this.init();
       }
     }
 </script>

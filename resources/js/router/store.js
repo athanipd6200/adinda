@@ -15,13 +15,19 @@ export default new Vuex.Store({
     url_base: 'https://adinda.gaweyan.com',
     token: localStorage.getItem('token') || '',
     rbac: localStorage.getItem('rbac') || '',
+    roles: localStorage.getItem('roles') || '',
+    permissions: localStorage.getItem('permissions') || '',
   },
 
   mutations: {
     setUserData (state, userData) {
       // console.log(userData)
       localStorage.setItem('token', userData.token)
+      // localStorage.setItem('roles', userData.roles)
+      // localStorage.setItem('permissions', userData.permissions)
       state.token = userData.token
+      // state.roles = userData.roles
+      // state.permissions = userData.permissions
       axios.defaults.headers.common.Authorization = `Bearer ${userData.token}`
     },
 
@@ -35,9 +41,21 @@ export default new Vuex.Store({
       localStorage.setItem('rbac', value)
     },
 
+    updateRoles(state, value) {
+      state.roles = value
+      localStorage.setItem('roles', value)
+    },
+
+    updatePermissions(state, value) {
+      state.permissions = value
+      localStorage.setItem('permissions', value)
+    },
+
     clearUserData () {
       localStorage.removeItem('token')
       localStorage.removeItem('rbac')
+      localStorage.removeItem('roles')
+      localStorage.removeItem('permissions')
       // localStorage.setItem('token', '')
       // state.token = ''
       location.reload()
@@ -45,8 +63,8 @@ export default new Vuex.Store({
   },
 
   actions: {
-    login ({ commit }, credentials) {
-      return axios
+    async login ({ commit }, credentials) {
+      return await axios
         .post('/api/login', credentials)
         .then(({ data }) => {
           console.log("Data dari web login : "+data)
@@ -59,10 +77,14 @@ export default new Vuex.Store({
 
     updateRBAC(context, value) { context.commit('updateRBAC', value) },
 
-    logout ({ commit }, credentials) {
+    updateRoles(context, value) { context.commit('updateRoles', value) },
+
+    updatePermissions(context, value) { context.commit('updatePermissions', value) },
+
+    async logout ({ commit }, credentials) {
       if(localStorage.getItem('token') && localStorage.getItem('token') != ''){
         // console.log('proses logout');
-        return axios
+        return await axios
         .post('/api/logout').then(response => {
             if(response.data.status == true){
               commit('clearUserData')
@@ -70,7 +92,7 @@ export default new Vuex.Store({
               commit('clearUserData')
             }
         }).catch( errors => {
-            console.log("Error aplikasi : " + errors.response.data);
+            console.log("Error aplikasi : " + errors);
             commit('clearUserData')
         })
       }else{
@@ -85,5 +107,7 @@ export default new Vuex.Store({
     user_data: state => state.user,
     token : state => state.token,
     rbac : state => state.rbac,
+    roles : state => state.roles,
+    permissions : state => state.permissions,
   }
 })

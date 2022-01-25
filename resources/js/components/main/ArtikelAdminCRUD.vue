@@ -864,6 +864,8 @@ L<template>
         isLoggedIn: this.$store.getters.isLogged,
         token: this.$store.getters.token,
         url_base: this.$store.getters.url_base,
+        roles: this.$store.getters.roles,
+        permissions: this.$store.getters.permissions,
         photos: [],
         desserts:[],
         dessertHeaders: [
@@ -901,7 +903,6 @@ L<template>
         tags_search_edit: "",
         errors:'',
         currentUser:{},
-        permissions:[],
         overlay: true,
         user_memberships: [],
       }
@@ -1651,18 +1652,16 @@ L<template>
       await axios.get('/api/user-permission').then(response => {
           this.currentUser = response.data.user;
           this.$store.commit('updateRBAC', response.data.permissions)
-          if(!(response.data.permissions).includes('articles.create')){
+          this.$store.commit('updateRoles', response.data.roles)
+          this.$store.commit('updatePermissions', response.data.permissions)
+          if(!response.data.roles.some(r => ['SuperAdmin', 'PenulisArtikelOrganisasi','PenulisArtikelDivisi','PenulisArtikelTim'].includes(r))){
             this.$router.push('/')
           }
       }).catch(errors => {
           console.log(errors);
       }).finally(() => {
-          this.permissions = this.$store.getters.rbac
+          this.permissions = this.$store.getters.permissions
       })
-      
-      // this.editor_read.isReadOnly = true;
-      // console.log(this.$refs['mapID']);
-      // this.initMap();
     },
   }
 </script>
