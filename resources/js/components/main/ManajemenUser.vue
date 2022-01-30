@@ -169,6 +169,8 @@
       
     <!-- </v-container> -->
   </v-dialog>
+
+  <!-- Isi menu -->
   <v-data-table
     :headers="headers"
     :items="users"
@@ -553,7 +555,7 @@
     },
 
     async mounted () {
-      await this.initialize()
+      await this.initialize();
       axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
       setTimeout(() => this.overlay = false, 1500);
       this.overlay = false

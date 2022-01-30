@@ -23,7 +23,7 @@ services:
             - adindadevs
         depends_on:
             - mysql
-            - redis
+            # - redisx
     mysql:
         image: 'mysql/mysql-server:8.0'
         ports:
@@ -43,18 +43,18 @@ services:
             test: ["CMD", "mysqladmin", "ping", "-p${DB_PASSWORD}"]
             retries: 3
             timeout: 5s
-    redis:
-        image: 'redis:alpine'
-        ports:
-            - '${FORWARD_REDIS_PORT:-6379}:6379'
-        volumes:
-            - 'adindaredis:/data'
-        networks:
-            - adindadevs
-        healthcheck:
-            test: ["CMD", "redis-cli", "ping"]
-            retries: 3
-            timeout: 5s
+    # redis:
+    #     image: 'redis:alpine'
+    #     ports:
+    #         - '${FORWARD_REDIS_PORT:-6379}:6379'
+    #     volumes:
+    #         - 'adindaredis:/data'
+    #     networks:
+    #         - adindadevs
+    #     healthcheck:
+    #         test: ["CMD", "redis-cli", "ping"]
+    #         retries: 3
+    #         timeout: 5s
     phpmyadmin:
         image: phpmyadmin
         ports:
@@ -62,24 +62,24 @@ services:
         environment:
           - PMA_HOST=mysql
         networks:
-            - adindadevs
-    portainer:
-        image: portainer/portainer-ce:latest
-        container_name: adindadevs-portainer
-        restart: unless-stopped
-        security_opt:
-          - no-new-privileges:true
-        volumes:
-          - /etc/localtime:/etc/localtime:ro
-          - /var/run/docker.sock:/var/run/docker.sock:ro
-          - ./portainer-data:/data
-        ports:
-          - 82:9000
+            - adindadevsx
+    # portainer:
+    #     image: portainer/portainer-ce:latest
+    #     container_name: adindadevs-portainer
+    #     restart: unless-stopped
+    #     security_opt:
+    #       - no-new-privileges:true
+    #     volumes:
+    #       - /etc/localtime:/etc/localtime:ro
+    #       - /var/run/docker.sock:/var/run/docker.sock:ro
+    #       - ./portainer-data:/data
+    #     ports:
+    #       - 82:9000
 networks:
     adindadevs:
         driver: bridge
 volumes:
     adindamysql:
         driver: local
-    adindaredis:
-        driver: local
+    # adindaredis:
+    #     driver: local

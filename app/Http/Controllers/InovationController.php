@@ -108,6 +108,7 @@ class InovationController extends Controller
         $gambar_inovation = [];
         $id_keanggotaan = $request->id_keanggotaan;
         $penulis = in_array($id_keanggotaan, $request->user()->keanggotaan_by_roles(['PenulisInovasiOrganisasi', 'PenulisInovasiDivisi', 'PenulisInovasiTim']));
+        // dd($penulis);
         if($request->user()->hasRole('SuperAdmin') || $penulis){
             $request->validate([
                 'nama_inovation' => ['required', 'string'],
@@ -153,6 +154,7 @@ class InovationController extends Controller
                     'gambar_inovation'=> count($gambar_inovation) > 0 ? implode(",",$gambar_inovation) : null,
                 ]);
             }catch (Exception $e) {
+                dd($e);
                 return response()->json(['status' => false, 'message' => $e->getMessage()]);
             }
         }else{

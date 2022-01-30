@@ -4,15 +4,15 @@ import axios from 'axios'
 
 Vue.use(Vuex)
 
-// axios.defaults.baseURL = 'http://localhost'
-axios.defaults.baseURL = 'https://adinda.gaweyan.com'
+axios.defaults.baseURL = 'http://localhost:8000'
+// axios.defaults.baseURL = 'https://adinda.gaweyan.com'
 // axios.defaults.baseURL = process.env.MIX_APP_URL+'/api'
 
 export default new Vuex.Store({
   state: {
     user: localStorage.getItem('user') || '',
-    // url_base: 'http://localhost',
-    url_base: 'https://adinda.gaweyan.com',
+    url_base: 'http://localhost:8000',
+    // url_base: 'https://adinda.gaweyan.com',
     token: localStorage.getItem('token') || '',
     rbac: localStorage.getItem('rbac') || '',
     roles: localStorage.getItem('roles') || '',

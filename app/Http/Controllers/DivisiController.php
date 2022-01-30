@@ -19,6 +19,7 @@ class DivisiController extends Controller
     public function index(Request $request)
     {
         //
+        // dd("hell0");
         try{
             if(($request->user()->hasRole('SuperAdmin')) && ($request->id_organisasi == null)){
                 // Masuk sebagai super admin
@@ -30,8 +31,13 @@ class DivisiController extends Controller
                 return response()->json(['status' => true, 'message' => "Berhasil ambil data divisi", 'data' => $divisis]);
             }else{
                 // Masuk sebagai API ngambil divisi
+            //    dd("hell01");
+
                 $divisis_ids = $request->user()->divisis();
-                $divisis = Divisi::with(['organisasi'])->whereIn('id_divisi', $divisis_ids)->leftJoin('keanggotaans', 'keanggotaans.id_keanggotaan', '=', 'divisis.id_divisi')->get();
+                // $divisis = Divisi::with(['organisasi'])->whereIn('id_divisi', $divisis_ids)->leftJoin('keanggotaans', 'keanggotaans.id_keanggotaan', '=', 'divisis.id_divisi')->get();
+                $divisis = Divisi::with(['organisasi'])->whereIn('id_divisi', $divisis_ids)->leftJoin('keanggotaans', 'keanggotaans.id_keanggotaan', '=', 'divisis.id_divisi')->groupby('id_divisi')->get();
+                // $remove_dup_divisis = $divisis->groupby('id_divisi');
+
                 return response()->json(['status' => true, 'message' => "Berhasil ambil data divisi", 'data' => $divisis]);
             }
         }catch (Exception $e) {
@@ -80,6 +86,8 @@ class DivisiController extends Controller
                     $file->move(public_path().'/logo_divisi/', $name);
                     $logo_divisi[] = $name;
                 }
+
+            
 
                 // $tags = json_decode($request->tags_inovation);
                 Divisi::create([

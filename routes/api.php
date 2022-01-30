@@ -96,7 +96,9 @@ Route::middleware('auth:sanctum')->get('/user-memberships/{role?}/{detail?}', fu
     if($detail == null){
         $detail = false;
     }
+    // dd($detail);
     $data = $request->user()->keanggotaan_by_role($role, $detail);
+    // dd($data);
     return response()->json(['status' => true, 'data' => $data, 'message' => 'Berhasil ambil data keanggotaan']);
 });
 
