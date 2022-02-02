@@ -511,6 +511,7 @@
         permission_singleSelect: false,
         permission_selected: [],
         permission_headers: [
+
           // {
           //   text: 'ID',
           //   align: 'start',
@@ -644,7 +645,10 @@
       },
 
       async rbacItem(item){
+<<<<<<< HEAD
         // console.log(item);
+=======
+>>>>>>> ca7b705b3048e7965e784e1afb7ba06ba30e178d
         this.overlay = true
         var refs = this
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
@@ -688,9 +692,14 @@
         formData.append('permissions', JSON.stringify(permissions_temp));
         this.overlay = true
         this.isLoading = "white"
+<<<<<<< HEAD
         // console.log(JSON.stringify(permissions_temp));
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
         console.log("/api/add-permissions/"+this.user.id, formData, config);
+=======
+        console.log(permissions_temp)
+        axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
+>>>>>>> ca7b705b3048e7965e784e1afb7ba06ba30e178d
         await axios.post("/api/add-permissions/"+this.user.id, formData, config).then(response => {
           this.dialogUserCreate = false
           console.log(response.data)
