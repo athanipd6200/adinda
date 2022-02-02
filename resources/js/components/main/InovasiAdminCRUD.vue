@@ -763,7 +763,7 @@ L<template>
           .then((response) => {
             //Then injecting the result to datatable parameters.
             // console.log('ambil data dari database')
-            console.log(response.data)
+            // console.log(response.data)
             this.desserts = response.data;
           }).catch(errors => {
             console.log(errors)
@@ -775,18 +775,37 @@ L<template>
       },
       async userMemberships(){
         await axios.get('/api/user-memberships/PenulisInovasiOrganisasi&PenulisInovasiDivisi&PenulisInovasiTim/true').then(response => {
-            let data = response.data.data
-            // console.log(response.data.data)
+            let data = response.data.data;
+            // console.log("ouu");
+            // console.log(response.data.data);
+            // console.log(data);
             let memberships = []
-            data.forEach(datum => {
+            // console.log(data[0]);
+            data[0].forEach(datum => {
+              // console.log(datum);
               if(datum.jenis_keanggotaan == 'organisasi'){
                 memberships.push({text : datum.nama_organisasi, value: datum.id_keanggotaan, type: 'organisasi'})
+                // const found = memberships.some(el => el.value === datum)
+                // console.log(datum.id_keanggotaan);
+                if (datum.id_divisi != null){
+                  memberships.push({text : datum.nama_divisi, value: datum.id_divisi, type : 'divisi'})
+                }
+                if(datum.nama_tim!=null){
+                  memberships.push({text : datum.nama_tim, value: datum.id_tim, type: 'tim'})
+                }
+                
+
               }else if(datum.jenis_keanggotaan == 'divisi'){
+                console.log(datum);
                 memberships.push({text : datum.nama_divisi, value: datum.id_keanggotaan, type : 'divisi'})
+                if(datum.nama_tim!=null){
+                  memberships.push({text : datum.nama_tim, value: datum.id_tim, type: 'tim'})
+                }
               }else if(datum.jenis_keanggotaan == 'tim'){
                 memberships.push({text : datum.nama_tim, value: datum.id_keanggotaan, type: 'tim'})
               }
             });
+            console.log(memberships);
             this.user_memberships = memberships
         }).catch(errors => {
             console.log(errors)
@@ -978,8 +997,10 @@ L<template>
       },
       async submitCreateItem(){
         var status_form = await this.$refs.observer_create_inovation.validate()
+        console.log(status_form);
         // start of upload
         if(status_form == true){
+          console.log("gueee disini");
           this.overlay = true
           this.isLoading = "primary"
           const config = {
@@ -1009,10 +1030,11 @@ L<template>
             }
               formData.append(`gambar_inovation`, JSON.stringify(filenames));
           }
-          // console.log(formData)
+          console.log(formData);
+          console.log(formData.get('deskripsi_inovation'));
 
           await axios.post("/api/insert-inovation", formData, config).then(async response => {
-            // console.log(response.data)
+            // console.log(formData)
             if(response.data.status == false){
               this.teksSnackbar= "Terjadi Kesalahan : "+JSON.stringify(response.data.message),
               this.warnaSnackbar= "red",

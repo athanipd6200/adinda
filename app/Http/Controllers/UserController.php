@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Ramsey\Uuid\Uuid;
@@ -11,6 +11,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
+use App\Models\User;
 use Spatie\Permission\Models\Permission;
 
 class UserController extends Controller
@@ -102,7 +103,9 @@ class UserController extends Controller
                 $user = User::find($id);
                 // $user->givePermissionTo(['articles.read', 'articles.update', 'articles.delete']);
                 $user_permissions_temp = $user->getAllPermissions();
-                $permissions_temp = Permission::all();
+                $permissions_temp = Permission::where('name', 'like', 'users%')->get();
+                // $permissions_temp = Permission::all();
+                // dd($permissions_temp);
                 foreach ($permissions_temp as $key => $value) {
                     // code...
                     $permissions[] = [
@@ -132,12 +135,15 @@ class UserController extends Controller
 
     public function addPermission(Request $request, String $id = null){
         $permissions = json_decode($request->permissions);
+        // dd($permissions);
+        // dd($request);
         // error_log($request->permissions);
         // error_log($request->user()->getAllPermissions());
         if($request->user()->hasPermissionTo('users.update')){
             try {
                 // error_log('masuk ke try');
                 $user = User::find($id);
+                //automatically add all of permisiion.
                 $user->syncPermissions($permissions);
             }catch(Exception $e){
                 error_log($e);

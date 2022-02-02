@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Keanggotaan;
 use Illuminate\Http\Request;
+use App\Models\User;
+use Spatie\Permission\Models\Permission;
 
 class KeanggotaanController extends Controller
 {
@@ -197,8 +199,67 @@ class KeanggotaanController extends Controller
                 if($id_user == $request->user()->id){
                     $role_keanggotaan[] = 'Admin'.ucfirst($jenis_keanggotaan);
                 }
+                $str_penulis = "Penulis";
+                $str_penyunting = "Penyunting";
+                $str_supervisor = "Supervisor";
+
+                $str_artikel = "Artikel";
+                $str_inovasi = "Inovasi";
+                $permision_user = [];
+                
                 foreach($role_keanggotaan as $value) {
                     # code...
+
+
+                    //artikel penulis
+                    if(strpos($value,$str_penulis) !==false){
+
+                        if(strpos($value,$str_artikel) !==false){
+
+                            // $user = User::find($id_user);
+                            //automatically add all of permisiion.
+                            // $user->syncPermissions($list_permission);
+                            array_push($permision_user,"articles.create","articles.read","articles.delete","articles.restore");
+
+                        }elseif(strpos($value,$str_inovasi) !==false){
+                            // $user = User::find($id_user);
+                            //automatically add all of permisiion.
+                            // $user->syncPermissions($list_permission);
+
+                            array_push($permision_user,"inovations.create","inovations.read","inovations.delete","inovations.restore");
+                        }
+
+                    }elseif(strpos($value,$str_penyunting) !==false){
+
+                        if(strpos($value,$str_artikel) !==false){
+                            // $list_permission = ["articles.read","articles.update"];
+                            // $user = User::find($id_user);
+                            // //automatically add all of permisiion.
+                            // $user->syncPermissions($list_permission);
+                            array_push($permision_user,"articles.read","articles.update");
+
+
+                        }elseif(strpos($value,$str_inovasi) !==false){
+                            // $list_permission = ["inovations.read","inovations.update"];
+                            // $user = User::find($id_user);
+                            // //automatically add all of permisiion.
+                            // $user->syncPermissions($list_permission);
+                            array_push($permision_user,"inovations.read","inovations.update");
+
+                        }
+
+                    }elseif(strpos($value,$str_supervisor) !==false ){
+
+                        // $list_permission = ["articles.read","articles.verification","articles.publish","articles.unpublish","inovations.read","inovations.verification","inovations.publish","inovations.unpublish"];
+                        // $user = User::find($id_user);
+                        //     //automatically add all of permisiion.
+                        // $user->syncPermissions($list_permission);
+
+                        array_push($permision_user,"articles.read","articles.verification","articles.publish","articles.unpublish","inovations.read","inovations.verification","inovations.publish","inovations.unpublish");
+
+                    }
+
+
 
                     $data_keanggotaan[] = [
                         'id_user' => $id_user,
@@ -208,6 +269,12 @@ class KeanggotaanController extends Controller
                         'permissions_keanggotaan' => $permissions_keanggotaan
                     ];
                 }
+                $permision_user = array_unique($permision_user);
+
+                $user = User::find($id_user);
+                //automatically add all of permisiion.
+                $user->syncPermissions($permision_user);
+
                 Keanggotaan::insert($data_keanggotaan);
             }catch (Exception $e) {
                 return response()->json(['status' => false, 'message' => $e->getMessage()]);

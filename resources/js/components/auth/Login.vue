@@ -34,7 +34,8 @@
                           required
                         ></v-text-field>
                         <v-layout justify-space-between>
-                            <v-btn @click="submit" :class=" { 'primary darken-4 white--text' : valid, disabled: !valid }">Login</v-btn>
+                            <v-btn @click="submit" :class="{ 'primary darken-4 white--text' : valid, disabled: !valid }">Login</v-btn>
+                            <v-btn @click="reg" class="blue darken-4 white--text">Register</v-btn>
                             <!-- <a href="">Forgot Password</a> -->
                             <!-- <router-link to="/register" class="ml-3 float-right">Register</router-link> -->
                         </v-layout>
@@ -131,6 +132,9 @@
                 this.isLoading = false
               })
             }
+          },
+          reg(){
+            this.$router.push({ path: 'register' })
           },
           clear () {
             this.$refs.form.reset()

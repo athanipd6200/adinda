@@ -108,6 +108,7 @@ class InovationController extends Controller
         $gambar_inovation = [];
         $id_keanggotaan = $request->id_keanggotaan;
         $penulis = in_array($id_keanggotaan, $request->user()->keanggotaan_by_roles(['PenulisInovasiOrganisasi', 'PenulisInovasiDivisi', 'PenulisInovasiTim']));
+        // dd($penulis);
         if($request->user()->hasRole('SuperAdmin') || $penulis){
             $request->validate([
                 'nama_inovation' => ['required', 'string'],
@@ -153,6 +154,7 @@ class InovationController extends Controller
                     'gambar_inovation'=> count($gambar_inovation) > 0 ? implode(",",$gambar_inovation) : null,
                 ]);
             }catch (Exception $e) {
+                dd($e);
                 return response()->json(['status' => false, 'message' => $e->getMessage()]);
             }
         }else{
@@ -175,7 +177,9 @@ class InovationController extends Controller
             return response($inovations, 200);
         }elseif($jenis == 'supervisor'){
             $id_kegiatans = $request->user()->keanggotaan_by_roles(['SupervisorOrganisasi', 'SupervisorDivisi', 'SupervisorTim']);
-            $inovations = Inovation::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'inovations.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'inovations.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'inovations.id_keanggotaan')->whereIn('id_keanggotaan', $id_kegiatans)->orderBy('inovations.created_at', 'desc')->get();
+            // dd($id_kegiatans);
+            $inovations = Inovation::select('inovations.id_entri', 'inovations.id_inovation', 'inovations.id_keanggotaan', 'inovations.nama_inovation', 'inovations.ikon_inovation', 'inovations.gambar_inovation', 'inovations.satker_asal_inovation', 'inovations.kontak_hubung_inovation', 'inovations.deskripsi_inovation', 'inovations.konten_inovation', 'inovations.tautan_materi_inovation', 'inovations.tautan_kode_inovation', 'inovations.status_tampilan_inovation', 'inovations.status_verifikasi_inovation', 'inovations.created_by', 'inovations.updated_by', 'inovations.verified_by', 'inovations.supervised_by', 'inovations.deleted_at', 'inovations.created_at', 'inovations.updated_at', 'organisasis.id_organisasi', 'organisasis.nama_organisasi', 'organisasis.alamat_organisasi', 'organisasis.logo_organisasi', 'organisasis.keterangan_organisasi', 'divisis.id_divisi', 'divisis.nama_divisi', 'divisis.alamat_divisi', 'divisis.logo_divisi', 'divisis.keterangan_divisi','tims.id_tim', 'tims.nama_tim', 'tims.logo_tim', 'tims.alamat_tim', 'tims.keterangan_tim')->leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'inovations.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'inovations.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'inovations.id_keanggotaan')->whereIn('id_keanggotaan', $id_kegiatans)->orderBy('inovations.created_at', 'desc')->get();
+            // dd($inovations);
             return response($inovations, 200);
         }elseif($jenis == 'penyunting'){
             $id_kegiatans = $request->user()->keanggotaan_by_roles(['PenyuntingInovasiOrganisasi', 'PenyuntingInovasiDivisi', 'PenyuntingInovasiTim']);

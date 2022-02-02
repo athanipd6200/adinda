@@ -770,6 +770,8 @@ L<template>
             //Then injecting the result to datatable parameters.
             this.loading = false;
             this.desserts = response.data;
+            // console.log("hahaha");
+            console.log(this.desserts);
           });
       },
       gambar_inovation_edit_arr(){

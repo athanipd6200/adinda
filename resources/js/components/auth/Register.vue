@@ -111,7 +111,7 @@
                           submit
                         </v-btn>
                         <!-- <v-spacer></v-spacer> -->
-                        <router-link to="/login" class="ml-3 float-right">Login instead</router-link>
+                        <p class="ml-3 float-right">Sudah punya akun? <router-link to="/login">Login!</router-link></p>
 
                         
 <!--                         <v-btn @click="clear">
@@ -237,11 +237,13 @@
           this.warnaSnackbar= "primary",
           this.snackbar = true
           this.clear()
+          
         }).catch(errors => {
           console.log(errors.response.data.errors)
           this.teksSnackbar= "Terjadi Kesalahan : "+ (errors.response.data.errors["message"]),
           this.warnaSnackbar= "red",
           this.snackbar = true
+
         }).finally(() => {
           this.isLoading = false
         })

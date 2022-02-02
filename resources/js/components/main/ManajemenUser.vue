@@ -169,6 +169,8 @@
       
     <!-- </v-container> -->
   </v-dialog>
+
+  <!-- Isi menu -->
   <v-data-table
     :headers="headers"
     :items="users"
@@ -509,12 +511,12 @@
         permission_singleSelect: false,
         permission_selected: [],
         permission_headers: [
-          {
-            text: 'ID',
-            align: 'start',
-            sortable: false,
-            value: 'id',
-          },
+          // {
+          //   text: 'ID',
+          //   align: 'start',
+          //   sortable: false,
+          //   value: 'id',
+          // },
           { text: 'Name', value: 'name' },
           { text: 'Didaftarkan', value: 'created_at' },
         ],
@@ -553,7 +555,7 @@
     },
 
     async mounted () {
-      await this.initialize()
+      await this.initialize();
       axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
       setTimeout(() => this.overlay = false, 1500);
       this.overlay = false
@@ -642,6 +644,7 @@
       },
 
       async rbacItem(item){
+        // console.log(item);
         this.overlay = true
         var refs = this
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
@@ -685,8 +688,9 @@
         formData.append('permissions', JSON.stringify(permissions_temp));
         this.overlay = true
         this.isLoading = "white"
-        console.log(permissions_temp)
+        // console.log(JSON.stringify(permissions_temp));
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
+        console.log("/api/add-permissions/"+this.user.id, formData, config);
         await axios.post("/api/add-permissions/"+this.user.id, formData, config).then(response => {
           this.dialogUserCreate = false
           console.log(response.data)

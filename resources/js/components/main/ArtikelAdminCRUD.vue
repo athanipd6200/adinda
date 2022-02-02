@@ -969,15 +969,33 @@ L<template>
             let data = response.data.data
             // console.log(response.data.data)
             let memberships = []
-            data.forEach(datum => {
+            data[0].forEach(datum => {
+            //   if(datum.jenis_keanggotaan == 'organisasi'){
+            //     memberships.push({text : datum.nama_organisasi, value: datum.id_keanggotaan, type: 'organisasi'})
+            //   }else if(datum.jenis_keanggotaan == 'divisi'){
+            //     memberships.push({text : datum.nama_divisi, value: datum.id_keanggotaan, type : 'divisi'})
+            //   }else if(datum.jenis_keanggotaan == 'tim'){
+            //     memberships.push({text : datum.nama_tim, value: datum.id_keanggotaan, type: 'tim'})
+            //   }
               if(datum.jenis_keanggotaan == 'organisasi'){
                 memberships.push({text : datum.nama_organisasi, value: datum.id_keanggotaan, type: 'organisasi'})
+                memberships.push({text : datum.nama_divisi, value: datum.id_divisi, type : 'divisi'})
+                if(datum.nama_tim!=null){
+                  memberships.push({text : datum.nama_tim, value: datum.id_tim, type: 'tim'})
+                }
+                
+
               }else if(datum.jenis_keanggotaan == 'divisi'){
+                console.log(datum);
                 memberships.push({text : datum.nama_divisi, value: datum.id_keanggotaan, type : 'divisi'})
+                if(datum.nama_tim!=null){
+                  memberships.push({text : datum.nama_tim, value: datum.id_tim, type: 'tim'})
+                }
               }else if(datum.jenis_keanggotaan == 'tim'){
                 memberships.push({text : datum.nama_tim, value: datum.id_keanggotaan, type: 'tim'})
               }
             });
+          
             this.user_memberships = memberships
         }).catch(errors => {
             console.log(errors)

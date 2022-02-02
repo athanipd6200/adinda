@@ -91,6 +91,7 @@ class OrganisasiController extends Controller
                     $file->move(public_path().'/logo_organisasi/', $name);
                     $logo_organisasi[] = $name;
                 }
+                
 
                 // $tags = json_decode($request->tags_inovation);
                 Organisasi::create([

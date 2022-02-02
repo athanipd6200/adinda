@@ -107,58 +107,158 @@ class User extends Authenticatable
         $id = $this->attributes['id'];
         $list_keanggotaan = [];
         $data = [];
-        if($this->hasRole('SuperAdmin') && $detail == false){
-            $list_keanggotaan = $data = Keanggotaan::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'keanggotaans.id_keanggotaan')->get();
-            return $list_keanggotaan;
+
+        // dd($detail);
+
+        // if($this->hasRole('SuperAdmin') && $detail == false){
+        //     $list_keanggotaan = $data = Keanggotaan::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'keanggotaans.id_keanggotaan')->get();
+        //     return $list_keanggotaan;
             
-        }else{
-            $data = $data = Keanggotaan::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'keanggotaans.id_keanggotaan')->get();
-            foreach($data as $key => $value){
-                array_push($list_keanggotaan, $value['id_keanggotaan']);
-            }
-            return $list_keanggotaan;
-        }
+        // }else{
+        //     $data = $data = Keanggotaan::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'keanggotaans.id_keanggotaan')->get();
+        //     foreach($data as $key => $value){
+        //         array_push($list_keanggotaan, $value['id_keanggotaan']);
+        //     }
+        //     return $list_keanggotaan;
+        // }
         
         if($detail == false){
             if($role == 'all'){
                 $data = Keanggotaan::select('id_keanggotaan')->where(['id_user' => $id])->get();
             }else{
+                // dd($id);
                 $roles = explode('&',$role);
                 $data = Keanggotaan::select('id_keanggotaan')->where('id_user', $id)->whereIn('role_keanggotaan', $roles)->get();
+                // $data = Keanggotaan::select('id_keanggotaan')->where('id_user', $id)->whereIn('role_keanggotaan', $roles)->toSql();
+                // dd($data);
+
             }
             foreach($data as $key => $value){
                 array_push($list_keanggotaan, $value['id_keanggotaan']);
             }
             // $list_keanggotaan = array_unique($list_keanggotaan);
         }else{
+            
             if($role == 'all'){
                 $data = Keanggotaan::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'keanggotaans.id_keanggotaan')->where(['id_user' => $id])->get();
+                // $flag = Keanggotaan::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'keanggotaans.id_keanggotaan')->where(['id_user' => $id]);
+
+                
                 // $data = Keanggotaan::all();
             }else{
+                $childRoles = array();
+
                 $roles = explode('&',$role);
-                $data = Keanggotaan::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'keanggotaans.id_keanggotaan')->where('id_user', $id)->whereIn('role_keanggotaan', $roles)->get();
+                // dd($id);
+
+                $organisasiRoles = Keanggotaan::join('organisasis', 'organisasis.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->where('id_user', $id)->whereIn('role_keanggotaan', $roles)->count();
+                $divisiRoles = Keanggotaan::join('divisis', 'divisis.id_divisi', '=', 'keanggotaans.id_keanggotaan')->where('id_user', $id)->whereIn('role_keanggotaan', $roles)->count();
+                $timRoles = Keanggotaan::join('tims', 'tims.id_tim', '=', 'keanggotaans.id_keanggotaan')->where('id_user', $id)->whereIn('role_keanggotaan', $roles)->count();
+                // dd($organisasiRoles);    
+
+                if($organisasiRoles>0){
+                    $data = Keanggotaan::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('divisis', 'divisis.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('tims', 'tims.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->where('id_user', $id)->whereIn('role_keanggotaan', $roles)->get();
+                    // $data = Keanggotaan::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('divisis', 'divisis.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('tims', 'tims.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->where('id_user', $id)->whereIn('role_keanggotaan', $roles)->toSql();
+                    // dd($data);
+
+                    array_push($childRoles,$data);
+                }elseif($divisiRoles>0){
+                    // dd("disini");
+                    $data = Keanggotaan::leftJoin('divisis', 'divisis.id_divisi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('tims', 'tims.id_divisi', '=', 'keanggotaans.id_keanggotaan')->where('id_user', $id)->whereIn('role_keanggotaan', $roles)->get();
+                    array_push($childRoles,$data);
+
+                }elseif($timRoles){
+                    $data = Keanggotaan::leftJoin('tims', 'tims.id_tim', '=', 'keanggotaans.id_keanggotaan')->where('id_user', $id)->whereIn('role_keanggotaan', $roles)->get();
+                    array_push($childRoles,$data);
+
+                }
+
+
+
+                
+                // $data = Keanggotaan::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('divisis', 'divisis.id_divisi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('tims', 'tims.id_tim', '=', 'keanggotaans.id_keanggotaan')->where('id_user', $id)->whereIn('role_keanggotaan', $roles)->get();
+
+                // dd($data);
             }
             // foreach($data as $key => $value){
             //     array_push($list_keanggotaan, $value['id_keanggotaan']);
             // }
-            $list_keanggotaan = $data;
+            $list_keanggotaan = $childRoles;
         }
+        // dd($list_keanggotaan);
         return $list_keanggotaan;
     }
 
+    // public function checkParent($role)
+    // {
+    //     $id = $this->attributes['id'];
+    //     $roles = explode('&',$role);
+    //     $data = Keanggotaan::distinct('jenis_keanggotaan')->where('id_user', $id)->whereIn('role_keanggotaan', $roles)->get();
+    //     return $data;
+    // }
+
+    public function getChild($id_kegiatan_value)
+    {
+        $id = $this->attributes['id'];
+        // dd($id_kegiatan_value);
+        // $data = Keanggotaan::leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('divisis', 'divisis.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('tims', 'tims.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->where(['id_user' => $id],['id_keanggotaan' => $id_kegiatan_value])->get();
+        $data = Keanggotaan::select('id_keanggotaan','divisis.id_divisi','tims.id_tim')->leftJoin('organisasis', 'organisasis.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('divisis', 'divisis.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->leftJoin('tims', 'tims.id_organisasi', '=', 'keanggotaans.id_keanggotaan')->where('id_user', $id)->where('id_keanggotaan', $id_kegiatan_value)->get();
+        // dd($data);
+        return $data;
+
+        # code...
+    }
+
+    // public function getLevel($array1, $array2)
+    // {
+    //     $count = 0;
+    //     foreach ($array1 as $i) {
+    //         if (in_array($i,$array2)) $count++;
+    //     }
+
+    //     return $count;
+    //     # code...
+    // }
+
     public function keanggotaan_by_roles(Array $roles, $detail = false){
         $id = $this->attributes['id'];
+        $akses = ['organisasi', 'divisi', 'tim'];
         $list_keanggotaan = [];
+        $list_access = [];
+        $list_divisi = [];
+        $list_tim = [];
         $data = [];
         if(count($roles) == 0){
             return $list_keanggotaan;
         }
+        // dd($roles[0]);
         if($detail == false){
             foreach($roles as $key1 => $role){
+                // dd($role);
                 $id_kegiatans = $this->keanggotaan_by_role($role);
                 foreach($id_kegiatans as $key2 => $id_kegiatan_value){
+                    $childs = $this->getChild($id_kegiatan_value);
+
+                    foreach ($childs as $child){
+                        if($child->id_divisi != null){
+                            array_push($list_divisi, $child->id_divisi);
+                            array_push($list_keanggotaan,$child->id_divisi);
+
+                        }
+
+                        if($child->id_tim != null){
+                            array_push($list_tim, $child->id_tim);
+                            array_push($list_keanggotaan,$child->id_tim);
+
+                        }
+                    }
+
                     array_push($list_keanggotaan, $id_kegiatan_value);
+
+
                 }
+
+
             }
             $list_keanggotaan = array_unique($list_keanggotaan);
         }else{
@@ -169,6 +269,7 @@ class User extends Authenticatable
                 }
             }
         }
+        // dd($list_keanggotaan);
         return $list_keanggotaan;
     }
 
