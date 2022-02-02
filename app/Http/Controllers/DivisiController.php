@@ -31,6 +31,7 @@ class DivisiController extends Controller
                 return response()->json(['status' => true, 'message' => "Berhasil ambil data divisi", 'data' => $divisis]);
             }else{
                 // Masuk sebagai API ngambil divisi
+
                 $divisis_ids = $request->user()->divisis();
                 // $divisis = Divisi::with(['organisasi'])->whereIn('id_divisi', $divisis_ids)->leftJoin('keanggotaans', 'keanggotaans.id_keanggotaan', '=', 'divisis.id_divisi')->get();
                 $divisis = Divisi::with(['organisasi'])->whereIn('id_divisi', $divisis_ids)->leftJoin('keanggotaans', 'keanggotaans.id_keanggotaan', '=', 'divisis.id_divisi')->groupby('id_divisi')->get();

@@ -780,18 +780,16 @@ L<template>
             // console.log(response.data.data);
             // console.log(data);
             let memberships = []
-
+            // console.log(data[0]);
             data[0].forEach(datum => {
               // console.log(datum);
               if(datum.jenis_keanggotaan == 'organisasi'){
                 memberships.push({text : datum.nama_organisasi, value: datum.id_keanggotaan, type: 'organisasi'})
-
                 // const found = memberships.some(el => el.value === datum)
                 // console.log(datum.id_keanggotaan);
                 if (datum.id_divisi != null){
                   memberships.push({text : datum.nama_divisi, value: datum.id_divisi, type : 'divisi'})
                 }
-
                 if(datum.nama_tim!=null){
                   memberships.push({text : datum.nama_tim, value: datum.id_tim, type: 'tim'})
                 }
@@ -807,11 +805,7 @@ L<template>
                 memberships.push({text : datum.nama_tim, value: datum.id_keanggotaan, type: 'tim'})
               }
             });
-<<<<<<< HEAD
             console.log(memberships);
-=======
-            // console.log(memberships);
->>>>>>> ca7b705b3048e7965e784e1afb7ba06ba30e178d
             this.user_memberships = memberships
         }).catch(errors => {
             console.log(errors)

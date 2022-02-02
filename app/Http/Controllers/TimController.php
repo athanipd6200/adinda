@@ -27,6 +27,7 @@ class TimController extends Controller
                 $tim_ids = $request->user()->tims();
                 // $tims = Tim::with(['divisi','organisasi'])->whereIn('id_tim', $tim_ids)->leftJoin('keanggotaans', 'keanggotaans.id_keanggotaan', '=', 'tims.id_tim')->get();
                 $tims = Tim::with(['divisi','organisasi'])->whereIn('id_tim', $tim_ids)->leftJoin('keanggotaans', 'keanggotaans.id_keanggotaan', '=', 'tims.id_tim')->groupby('tims.id_tim')->get();
+                // dd($tims);
 
                 return response()->json(['status' => true, 'message' => "Berhasil mengambil data tim", 'data' => $tims]);
             }

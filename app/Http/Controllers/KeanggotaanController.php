@@ -199,7 +199,6 @@ class KeanggotaanController extends Controller
                 if($id_user == $request->user()->id){
                     $role_keanggotaan[] = 'Admin'.ucfirst($jenis_keanggotaan);
                 }
-<<<<<<< HEAD
                 $str_penulis = "Penulis";
                 $str_penyunting = "Penyunting";
                 $str_supervisor = "Supervisor";
@@ -262,11 +261,6 @@ class KeanggotaanController extends Controller
 
 
 
-=======
-                foreach($role_keanggotaan as $value) {
-                    # code...
-
->>>>>>> ca7b705b3048e7965e784e1afb7ba06ba30e178d
                     $data_keanggotaan[] = [
                         'id_user' => $id_user,
                         'id_keanggotaan' => $id_keanggotaan,
@@ -275,15 +269,12 @@ class KeanggotaanController extends Controller
                         'permissions_keanggotaan' => $permissions_keanggotaan
                     ];
                 }
-<<<<<<< HEAD
                 $permision_user = array_unique($permision_user);
 
                 $user = User::find($id_user);
                 //automatically add all of permisiion.
                 $user->syncPermissions($permision_user);
 
-=======
->>>>>>> ca7b705b3048e7965e784e1afb7ba06ba30e178d
                 Keanggotaan::insert($data_keanggotaan);
             }catch (Exception $e) {
                 return response()->json(['status' => false, 'message' => $e->getMessage()]);
